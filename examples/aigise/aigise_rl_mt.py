@@ -144,8 +144,8 @@ class AIgiSERLWorkflow(RolloutWorkflow):
             ArealOpenAI(
                 engine=engine,
                 tokenizer=self.tokenizer,
-                tool_call_parser="qwen3",
-                reasoning_parser="qwen3",
+                tool_call_parser="qwen25",
+                reasoning_parser="qwen3-thinking",
                 chat_template_type=self.chat_template_type,
             )
             for _ in range(self.n_trajs)
