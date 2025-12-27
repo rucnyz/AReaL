@@ -44,6 +44,7 @@ from __future__ import annotations
 
 import json
 import logging
+from collections.abc import Callable
 from typing import TYPE_CHECKING, Any, AsyncGenerator, Generator
 
 from google.adk.agents import LlmAgent
@@ -98,10 +99,12 @@ class ArealLlm(BaseLlm):
     model: str = "areal"
 
     def __init__(
-        self,
-        openai_client: "ArealOpenAI",
-        model_name: str = "areal",
-        **kwargs: Any,
+            self,
+            openai_client: "ArealOpenAI",
+            model_name: str = "areal",
+            default_max_tokens: int | None = None,
+            on_generate: Callable[[str, str], None] | None = None,
+            **kwargs: Any,
     ):
         """Initialize ArealLlm.
 
@@ -110,11 +113,18 @@ class ArealLlm(BaseLlm):
                 This client handles token log probability tracking and
                 reward management.
             model_name: Model identifier string (default: "areal")
+            default_max_tokens: Default max tokens per generation. Used when
+                LlmRequest.config.max_output_tokens is not set.
+            on_generate: Optional callback function called after each generation
+                with (input_text, output_text) as arguments. Useful for logging
+                or debugging.
             **kwargs: Additional arguments passed to BaseLlm
         """
         super().__init__(**kwargs)
         self.model = model_name
         self._client = openai_client
+        self._default_max_tokens = default_max_tokens
+        self._on_generate = on_generate
 
     @staticmethod
     def supported_models() -> list[str]:
@@ -122,7 +132,7 @@ class ArealLlm(BaseLlm):
         return ["areal"]
 
     def _convert_contents_to_messages(
-        self, contents: list[Content]
+            self, contents: list[Content]
     ) -> list[dict[str, Any]]:
         """Convert Google ADK Content list to OpenAI messages format.
 
@@ -199,7 +209,7 @@ class ArealLlm(BaseLlm):
         return messages
 
     def _convert_tools_to_openai(
-        self, tools_dict: dict[str, Any] | None
+            self, tools_dict: dict[str, Any] | None
     ) -> list[dict[str, Any]] | None:
         """Convert Google ADK tools to OpenAI tools format.
 
@@ -275,7 +285,7 @@ class ArealLlm(BaseLlm):
         return result
 
     def _convert_function_declarations_to_openai(
-        self, config: Any
+            self, config: Any
     ) -> list[dict[str, Any]] | None:
         """Convert function declarations from config.tools to OpenAI format.
 
@@ -334,7 +344,7 @@ class ArealLlm(BaseLlm):
         return openai_tools if openai_tools else None
 
     def _convert_response_to_llm_response(
-        self, response: Any, response_id: str
+            self, response: Any, response_id: str
     ) -> LlmResponse:
         """Convert OpenAI ChatCompletion to Google ADK LlmResponse.
 
@@ -351,7 +361,7 @@ class ArealLlm(BaseLlm):
 
         # Add text content
         if message.content:
-            parts.append(Part.from_text(text=message.content))
+            parts.append(Part.from_text(text = message.content))
 
         # Add tool calls
         if hasattr(message, "tool_calls") and message.tool_calls:
@@ -364,16 +374,16 @@ class ArealLlm(BaseLlm):
                         args = {"raw": func.arguments}
 
                     part = Part.from_function_call(
-                        name=func.name,
-                        args=args,
+                        name = func.name,
+                        args = args,
                     )
                     # Set the tool call id on the function_call for proper tracking
                     if hasattr(part, "function_call") and part.function_call:
                         part.function_call.id = tool_call.id
                     parts.append(part)
 
-        content = Content(role="model", parts=parts)
-        llm_response = LlmResponse(content=content)
+        content = Content(role = "model", parts = parts)
+        llm_response = LlmResponse(content = content)
 
         # Set finish_reason
         finish_reason = getattr(choice, "finish_reason", None)
@@ -387,38 +397,15 @@ class ArealLlm(BaseLlm):
         usage = getattr(response, "usage", None)
         if usage:
             llm_response.usage_metadata = types.GenerateContentResponseUsageMetadata(
-                prompt_token_count=getattr(usage, "prompt_tokens", 0),
-                candidates_token_count=getattr(usage, "completion_tokens", 0),
-                total_token_count=getattr(usage, "total_tokens", 0),
+                prompt_token_count = getattr(usage, "prompt_tokens", 0),
+                candidates_token_count = getattr(usage, "completion_tokens", 0),
+                total_token_count = getattr(usage, "total_tokens", 0),
             )
 
         return llm_response
 
-    def generate_content(
-        self, llm_request: LlmRequest, stream: bool = False
-    ) -> Generator[LlmResponse, None, None]:
-        """Synchronous content generation (not recommended for AReaL).
-
-        This method is provided for interface compatibility but is not
-        recommended. Use generate_content_async for proper async operation.
-
-        Args:
-            llm_request: LlmRequest from Google ADK
-            stream: Whether to stream responses (not supported)
-
-        Yields:
-            LlmResponse objects
-
-        Raises:
-            NotImplementedError: Always raised, use async version instead
-        """
-        raise NotImplementedError(
-            "ArealLlm only supports async generation. "
-            "Use generate_content_async instead."
-        )
-
     async def generate_content_async(
-        self, llm_request: LlmRequest, stream: bool = False
+            self, llm_request: LlmRequest, stream: bool = False
     ) -> AsyncGenerator[LlmResponse, None]:
         """Generate content asynchronously using ArealOpenAI.
 
@@ -469,6 +456,10 @@ class ArealLlm(BaseLlm):
             if hasattr(config, "max_output_tokens") and config.max_output_tokens:
                 kwargs["max_tokens"] = config.max_output_tokens
 
+        # Use default_max_tokens if max_tokens not set from config
+        if "max_tokens" not in kwargs and self._default_max_tokens is not None:
+            kwargs["max_tokens"] = self._default_max_tokens
+
         # Add tools if present
         if tools:
             kwargs["tools"] = tools
@@ -476,9 +467,22 @@ class ArealLlm(BaseLlm):
         try:
             # Call ArealOpenAI
             response = await self._client.chat.completions.create(
-                messages=messages,
+                messages = messages,
                 **kwargs,
             )
+            import pydevd_pycharm
+            pydevd_pycharm.settrace('localhost', port = 6067, stdout_to_server = True, stderr_to_server = True)
+            # Call on_generate callback if provided
+            if self._on_generate:
+                interaction = self._client.get_interaction(response.id)
+                if interaction and interaction.model_response:
+                    input_text = self._client.tokenizer.decode(
+                        interaction.model_response.input_tokens
+                    )
+                    output_text = self._client.tokenizer.decode(
+                        interaction.model_response.output_tokens_without_stop
+                    )
+                    self._on_generate(input_text, output_text)
 
             # Convert and yield response
             llm_response = self._convert_response_to_llm_response(
@@ -490,7 +494,7 @@ class ArealLlm(BaseLlm):
             logger.error(f"ArealLlm generation error: {e}")
             # Return error response
             error_content = Content(
-                role="model",
-                parts=[Part.from_text(text=f"Error: {str(e)}")],
+                role = "model",
+                parts = [Part.from_text(text = f"Error: {str(e)}")],
             )
-            yield LlmResponse(content=error_content)
+            yield LlmResponse(content = error_content)
