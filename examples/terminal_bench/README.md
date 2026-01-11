@@ -7,23 +7,24 @@
 **Step 1: Start Dev Node Server** (on a machine with Docker access)
 ```bash
 # On the dev node machine (must have Docker running)
-cd /path/to/areal
-python terminal_agent_utils/dev_node_server.py --host 0.0.0.0 --port 8081
+cd /path/to/verl
+python -m terminal_agent_utils.dev_node_server.py --host 0.0.0.0 --port 8081
 ```
 
 **Step 2: Run Training** (on the training node)
 ```bash
-# Option A: Set environment variable
-export DEV_NODE_URL=http://<dev-node-ip>:8080
+./run_terminal_bench.sh
 
-CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 python -m areal.launcher.local \
-    examples/terminal_bench/terminal_bench_rl.py \
-    --config examples/terminal_bench/terminal_bench_config.yaml \
-    experiment_name=terminal-bench-test \
-    trial_name=qwen3-8b-test \
-    actor.path=Qwen/Qwen3-8B \
-    +sglang.attention_backend=triton \
-    stats_logger.wandb.mode=disabled
+# Option A: Set environment variable
+export DEV_NODE_URL=http://10.32.80.102:8081
+
+python -m areal.launcher.local \                                         
+      examples/terminal_bench/terminal_bench_rl.py \
+      --config examples/terminal_bench/terminal_bench_config.yaml \
+      experiment_name=terminal-bench-test \
+      trial_name=qwen3-32b-test \
+      actor.path=/wekafs/kazhu/Qwen2-5-Coder-32B-sft-3000-agent-diverse-real-5ep-5e-6 \
+      agent_config.use_remote=false +sglang.attention_backend=triton
 
 # Option B: Use command line args
 CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 python -m areal.launcher.local \

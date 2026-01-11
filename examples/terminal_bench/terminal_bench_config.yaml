@@ -23,7 +23,7 @@ agent_config:
   cleanup: true
   save_trajectory: true
   use_remote: null  # null=auto-detect from DEV_NODE_URL env, true=remote, false=local
-  max_containers: 32
+  max_containers: 64
 
 cluster:
   n_nodes: 1
@@ -33,7 +33,7 @@ cluster:
     type: nfs
     nfs_record_root: running_logs/name_resolve
 
-allocation_mode: sglang:d4p1t1+d1p1t4
+allocation_mode: sglang:d1p1t4+d1p1t4
 
 scheduler:
   type: null

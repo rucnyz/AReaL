@@ -16,6 +16,8 @@ import subprocess
 import sys
 import uuid
 from dataclasses import dataclass, field
+
+import requests
 from enum import Enum
 from pathlib import Path
 from typing import Any, Union
@@ -134,27 +136,42 @@ class TerminalBenchAgent:
     _LOCK_FILE = "/tmp/areal_docker_container.lock"
     _PENDING_FILE = "/tmp/areal_docker_pending.count"
 
-    @staticmethod
-    def _get_docker_container_count() -> int:
-        """Get current count of running Docker containers with tb__ prefix.
+    def _get_docker_container_count(self) -> int:
+        """Get current count of running Docker containers.
+
+        In remote mode, queries the dev node's /health endpoint.
+        In local mode, counts local Docker containers with tb__ prefix.
 
         Returns:
-            Number of running containers matching the filter.
+            Number of running containers.
         """
-        try:
-            result = subprocess.run(
-                ["docker", "ps", "--filter", "name=tb__", "-q"],
-                capture_output=True,
-                text=True,
-                timeout=5,
-            )
-            if result.returncode == 0:
-                # Count non-empty lines
-                lines = [l for l in result.stdout.strip().split("\n") if l]
-                return len(lines)
-            return 0
-        except Exception:
-            return 0
+        if self._should_use_remote():
+            # Remote mode: query dev node for active container count
+            try:
+                dev_node_url = os.environ.get("DEV_NODE_URL") or self.config.dev_node_url
+                response = requests.get(f"{dev_node_url}/health", timeout=5)
+                if response.status_code == 200:
+                    data = response.json()
+                    return data.get("active_containers", 0)
+                return 0
+            except Exception:
+                return 0
+        else:
+            # Local mode: count local Docker containers with tb__ prefix
+            try:
+                result = subprocess.run(
+                    ["docker", "ps", "--filter", "name=tb__", "-q"],
+                    capture_output=True,
+                    text=True,
+                    timeout=5,
+                )
+                if result.returncode == 0:
+                    # Count non-empty lines
+                    lines = [l for l in result.stdout.strip().split("\n") if l]
+                    return len(lines)
+                return 0
+            except Exception:
+                return 0
 
     @staticmethod
     def _read_pending_count() -> int:
@@ -798,6 +815,9 @@ class TerminalBenchWorkflow(RolloutWorkflow):
             gconfig=gconfig.new(n_samples=1),
             config=agent_config,
         )
+
+        # Reset pending counter to clear stale state from previous runs
+        TerminalBenchAgent.reset_pending_counter()
 
     async def arun_episode(self, engine, data):
         """Run single episode of terminal bench task.
