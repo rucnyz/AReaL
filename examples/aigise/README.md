@@ -7,15 +7,12 @@ training data and discount reward.
 # To run the example
 
 ```bash
-python3 -m areal.launcher.ray examples/multi-turn-math/gsm8k_rl_mt.py \
-    --config examples/multi-turn-math/gsm8k_grpo_mt.yaml \
-    experiment_name=gsm8k-grpo-multiturn trial_name=trial0
+cd aigise
+pip install -e '.[langfuse]'
 
-export FLASHINFER_WORKSPACE_BASE=./flashinfer_cache
-python3 -m areal.launcher.local \
-  examples/aigise/gsm8k_rl_mt.py \
-    --config examples/aigise/gsm8k_grpo_mt.yaml \
-    experiment_name=aigise-grpo-multiturn trial_name=trial1
+# follow areal installation guide
+
+FLASHINFER_WORKSPACE_BASE=./flashinfer_cache AREAL_CACHE_DIR=./areal_cache python -m areal.launcher.local examples/aigise/aigise_rl_mt.py --config examples/aigise/aigise_grpo_mt.yaml experiment_name=aigise-grpo-multiturn trial_name=trial0
 ```
 
 only the following config are added compared to the original `gsm8k_grpo.yaml` config:

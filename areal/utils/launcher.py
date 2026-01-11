@@ -39,6 +39,7 @@ BASE_ENVIRONS = {
     "VLLM_CACHE_ROOT": VLLM_CACHE_ROOT,
     "CUDA_DEVICE_MAX_CONNECTIONS": "1",
     "PYTHONPATH": PYTHONPATH,
+    "PATH": os.environ.get("PATH", ""),
 }
 
 
