@@ -1,0 +1,85 @@
+ELF>�@@�@8	@@@@@��888�������� �  � )))�)�)��  �����  �  ���TTTDDD}}�}}�}}�lP�td���������Q�tdR�td)))�)�)���GNU�GNU�!ʮ3t��LbI׵��3$�J�s$	�X
+�� y1 �� �"(��@  @����� �`�B���o��2p�
+��q���o��"
+	���oP0@0@0@0@0@0@0@0@0@0@0@0@0@0@0GCC: (Ubuntu 11.4.0-1ubuntu1~22.04) 11.4.0���� (zRx�(0�����A�C
+K
+�A�C
+A�
+,���AA�C
+B�D�� (����A�C
+A�r
+A��FJw�z�GCC: (Ubuntu 11.4.0-1ubuntu1~22.04) 11.4.0 Ubuntu���K(���K@���K(���K@� H  h h X$
+�����		���oT%���o�(���o�@0���8���@���H���P���X���`���h���p���x���������������������������������������������������������hh ��(��0��8��@��H��P��X��`��h��
+p��x����������������������������������������������������������������
+ ��(��0��8��@��H��P��X��`��h��p��x����������������������������������������������������������#��+��3��;��C��K��
+S��[��c��k��	s��{��������������������������������������������� 
+��
+(��0��8��@��H��P��X��`��h��p��x����������������������������������������������������������������(��0��8��@��H��P��X��`��h��p��x���������������������������������������������������������������� ��(��0��8��@��H��P��X��`��h��p��x�����������������������������������������������	��
+������#��+��3��;��C��K��S��[��c��k��s��{������������������������������������������������������crtstuff.c deregister_tm_clones __do_global_dtors_aux completed.0 __do_global_dtors_aux_fini_array_entry frame_dummy __frame_dummy_init_array_entry data_processor.c __FRAME_END__ _DYNAMIC __GNU_EH_FRAME_HDR _GLOBAL_OFFSET_TABLE_ __libc_start_main@GLIBC_2.34 _ITM_deregisterTMCloneTable puts@GLIBC_2.2.5 stdin@GLIBC_2.2.5 _edata _fini __stack_chk_fail@GLIBC_2.4 strcmp@GLIBC_2.2.5 malloc@GLIBC_2.2.5 __data_start __gmon_start__ __dso_handle _IO_stdin_used free@GLIBC_2.2.5 _end __bss_start main fgets@GLIBC_2.2.5 __TMC_END__ _ITM_registerTMCloneTable __cxa_finalize@GLIBC_2.2.5 _init .symtab .strtab .shstrtab .interp .note.gnu.property .note.gnu.build-id .note.ABI-tag .gnu.hash .dynsym .dynstr .gnu.version .gnu.version_r .rela.dyn .rela.plt .init .plt.got .plt.sec .text .fini .rodata .eh_frame_hdr .eh_frame .init_array .fini_array .dynamic .data .bss .comment .debug_aranges .debug_info .debug_abbrev .debug_line .debug_str .debug_line_str  $1���o�(;���oTC���o�@�@XK���o�P�PUB���W)))0))`)))la)))�))){ ��f8�8�qk  ��}v � � �~  @  @@@���H H H(�� h h h��� � � ��� � � ���� � � ���)))2��)))��(�(�(��H�H�H��� h h h ��x�x�x(���������������                                                                                                                        ��                             ��             (             @             �@                           �@             �@             P             �P             �             8             �             (                                         h                            �                            �             	             @             �                           )))                         )))                         )             )                         )             (             ))             (             !             h                            �                            �              �              �              �!              �!                                                                                                                                                         (                                                       ��                      UH��H���}��u��}�u2�}���  u(H�=7�����H��]���Usage: %s <simple|advanced|optimized>
+simple�����������advanced��H��H���l����optimized��H��H���X���t+H��`���Ð������H�������Є�t�H��@����H��]�memory leak test in simple mode
+��������memory leak test in advanced mode
+��memory leak test in optimized mode
+H�E�H�������Processing complete
+AWL�=�AVI��AUI��ATA��UH�-�SL)�H������H��t1��L��L��D��A��H��H9�u�H�[]A\A]A^A_�ff.���H�H��data_processor simple < input.txtdata_processor advanced < input.txtdata_processor optimized < input.txt;H
+H���X����������zRx�$h���FJw�?:*3$"D��`\���A�C
+B�A�M
+A�D0����eA�C
+B�G��M��
+E������A�C
+A������A�C
+E�]
+J,P���A�C
+C��G
+EL
+AH|���PA�C
+B�E�D�u
+G_
+OD
+IB
+AD�����PA�C
+B�E�D�e
+Gy
+Ew
+KD
+I$����A�C
+B�D��
+H,����A�C
+M�����
+D ����A�G
+B�L�|
+A4|���A�G
+C��X
+D@
+HTt���$����$����A�J
+I�� ���(A�C
+B�J��
+M<8���PA�C
+I���M
+GP
+H`
+H<x���PA�C
+I���M
+GP
+H`
+HD�����A�C
+B�N�M
+JO
+Je
+MY
+M��������o��
+�1��@�(��H�P�`p�����0���@���P�`�p���������������0��@��P�`��p��������������������0��@��P�`��p��������������������0��@��P�`��p��������������������0@P`p�����������0@GCC: (Ubuntu 11.4.0-1ubuntu1~22.04) 11.4.0Ubuntu clang version 14.0.0-1ubuntu1.1 �����())�)h����� ���������P�P�P�����)@)H�������P�P���T@T��^��������)D)L�����x����)���������X���))�����������$�������������� process_simple�process_advanced�process_optimized	main
+	int__ARRAY_SIZE_TYPE__
+charlong int
+�char_Z8calloc_wrapj�j
+sizetype�j�
+�char�stdin_IO_FILE_flags�_IO_read_ptr�_IO_read_end�_IO_read_base�_IO_write_base�_IO_write_ptr�_IO_write_end�_IO_buf_base�_IO_buf_end
+�_IO_save_base�_IO_backup_base�_IO_save_end�_markers_IO_marker*�_chain
+�_fileno�_flags2�_old_offset__off_t�_cur_column
+short unsigned int!�_vtable_offset �_shortbuf�_lock_IO_lock_t*<�_offset__off64_t E�_codecvt_IO_codecvt*Q�_wide_data_IO_wide_data*f�_freeres_list
+�_freeres_buf�__pad5�_mode�_unused2
+���������������� ��GNU C17 11.4.0 -mtune=generic -march=x86-64 -g -fasynchronous-unwind-tables -fstack-protector-strong -fstack-clash-protection -fcf-protection�fgets�������������malloc�����~strcmp������!�� ;�data_processor.c/home/agent/usr/include/x86_64-linux-gnuputs�������������free������������������������������������������^long unsigned int	short intH�H���sizetype	unsigned charsigned charlong intP�short unsigned int	GNU C17 11.4.0 -mtune=generic -march=x86-64 -g -fasynchronous-unwind-tables -fstack-protector-strong -fstack-clash-protection -fcf-protectionprocess_advancedprocess_optimizedprocess_simpledata_processor.c/home/agent�char^mainstdinargcargvmodetemplinebufsimple_leakoptimized_leak_IO_FILEintunion_G_fpos_t__off_t__off64_tFILE_flags_IO_read_ptr_IO_read_end_IO_read_base_IO_write_base_IO_write_ptr_IO_write_end_IO_buf_base_IO_buf_end_IO_save_base_IO_backup_base_IO_save_end_markers_IO_marker*_chain
+_fileno_flags2_old_offset_cur_columnshort unsigned int _vtable_offset_shortbuf_lock_IO_lock_t*_offset_codecvt_IO_codecvt*_wide_data_IO_wide_data*_freeres_list
+_freeres_buf__pad5_mode_unused2	
+_IO_lock_t_IO_marker	_sbuf_pos	 �_IO_codecvt �_IO_wide_data mallocfgetsstrcmpfreeputs � .symtab.strtab.shstrtab.interp.note.gnu.property.note.gnu.build-id.note.ABI-tag.gnu.hash.dynsym.dynstr.gnu.version.gnu.version_r.rela.dyn.rela.plt.init.plt.got.plt.sec.text.fini.rodata.eh_frame_hdr.eh_frame.init_array.fini_array.dynamic.data.bss.comment.debug_aranges.debug_info.debug_abbrev.debug_line.debug_str.debug_line_str �� �(�(�o  �@�@$�@�@T
+9���o�P�PP
+B���o�@�@�@�Q���W0)0)0)`)))P))}a � �fk8�8�8q{v � � �~ @@@@� �����H H H(X� h h h��)� � � �� � � �� � � ���))))�)))))) ��(�(�( ��H�H�H��� h h h �x�x�x(��������������������������������!������:	��?�������l�h"��w���������,&��

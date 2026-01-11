@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "mcp__ide__getDiagnostics",
+      "Bash(fi)",
+      "Bash(done)",
+      "Bash(ls:*)",
+      "Bash(python -m json.tool:*)",
+      "Bash(tree:*)",
+      "Bash(nvidia-smi:*)",
+      "Bash(tar:*)",
+      "Bash(CUDA_VISIBLE_DEVICES=0,2,3,4 python:*)",
+      "Bash(conda env list:*)",
+      "Bash(source:*)",
+      "Bash(conda activate:*)",
+      "Bash(pip install:*)",
+      "Read(//scratch/yuzhou/**)",
+      "Bash(CUDA_VISIBLE_DEVICES=0,2,3,4 /scratch/yuzhou/miniconda3/envs/areal/bin/python:*)"
+    ]
+  }
+}

