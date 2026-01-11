@@ -1,0 +1,114 @@
+# Caching Proxy Configuration
+# Production Cache Server - v2.3.1
+# Last Modified: 2024-01-15
+
+cache_configuration:
+  # Core cache key generation components
+  # The cache key determines if two requests are considered identical
+  cache_key_components:
+    - url_path          # Request URI path
+    - host_header       # Host header from client
+    - query_string      # URL query parameters
+    - request_method    # HTTP method (GET, POST, etc.)
+  
+  # Headers that are IGNORED in cache key generation
+  # WARNING: These headers are still passed to the backend application!
+  # This can create a cache poisoning vulnerability if the backend
+  # uses these headers to generate dynamic content
+  ignored_headers:
+    - X-Forwarded-Host
+    - X-Original-URL
+    - X-Forwarded-Server
+    - X-Host
+    - X-Forwarded-Scheme
+    - X-Rewrite-URL
+    - Forwarded
+    - True-Client-IP
+    - X-Custom-IP-Authorization
+  
+  # Default time-to-live for cached entries (in seconds)
+  default_ttl: 3600
+  
+  # Maximum cache size (in MB)
+  max_cache_size: 10240
+  
+  # Cache rules for specific paths
+  cache_rules:
+    - path_pattern: "/api/*"
+      ttl: 1800
+      methods: 
+        - GET
+        - HEAD
+      enabled: true
+      description: "API endpoints with 30 minute cache"
+    
+    - path_pattern: "/static/*"
+      ttl: 86400
+      methods:
+        - GET
+        - HEAD
+      enabled: true
+      description: "Static assets with 24 hour cache"
+    
+    - path_pattern: "/user/profile"
+      ttl: 1800
+      methods:
+        - GET
+      enabled: true
+      description: "User profile endpoint"
+    
+    - path_pattern: "/admin/*"
+      ttl: 0
+      methods: []
+      enabled: false
+      description: "Admin paths are not cached"
+  
+  # Headers that should affect cache variance
+  # Responses will be cached separately for different values of these headers
+  vary_headers:
+    - Accept-Language
+    - Accept-Encoding
+  
+  # HTTP methods that are cacheable
+  cacheable_methods:
+    - GET
+    - HEAD
+  
+  # Status codes that should be cached
+  cacheable_status_codes:
+    - 200
+    - 301
+    - 302
+    - 404
+  
+  # Header added to responses indicating cache status
+  cache_status_header:
+    enabled: true
+    header_name: "X-Cache-Status"
+    values:
+      hit: "HIT"
+      miss: "MISS"
+      bypass: "BYPASS"
+  
+  # Upstream backend server configuration
+  upstream_backend:
+    host: "app-server-01.internal"
+    port: 8080
+    protocol: "http"
+    timeout: 30
+    keepalive: 64
+  
+  # Request normalization settings
+  normalization:
+    lowercase_headers: false
+    remove_duplicate_headers: true
+    header_order_matters: false
+  
+  # Security settings
+  security:
+    enable_purge: false
+    purge_acl:
+      - "127.0.0.1"
+      - "10.0.0.0/8"
+    max_header_size: 8192
+    max_request_size: 10485760

@@ -1,0 +1,4 @@
+timeout: 30
+max_paths: 100
+verbose: true
+z3_timeout: 5000
