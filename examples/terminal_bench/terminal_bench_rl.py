@@ -12,13 +12,12 @@ Usage:
 import asyncio
 import json
 import os
-import subprocess
 import sys
+import time
 import uuid
+from contextlib import asynccontextmanager
+from copy import deepcopy
 from dataclasses import dataclass, field
-
-import requests
-from enum import Enum
 from pathlib import Path
 from typing import Any, Union
 
@@ -43,11 +42,13 @@ LOGGER_COLORS_EXACT["VLLMWrapper"] = "light_cyan"  # Like other inference engine
 try:
     from .dataset import load_terminal_bench_dataset
     from .remote_terminal import RemoteTerminal, RemoteTmuxSession, Terminal, TmuxSession
+    from .remote_terminal.remote_docker_client import RemoteDockerClient
     from .reward import UnitTestStatus, compute_reward, parse_pytest_results
 except ImportError:
     # When running directly with torchrun, use absolute imports
     from examples.terminal_bench.dataset import load_terminal_bench_dataset
     from examples.terminal_bench.remote_terminal import RemoteTerminal, RemoteTmuxSession, Terminal, TmuxSession
+    from examples.terminal_bench.remote_terminal.remote_docker_client import RemoteDockerClient
     from examples.terminal_bench.reward import UnitTestStatus, compute_reward, parse_pytest_results
 
 # Type alias for terminal classes
@@ -74,15 +75,6 @@ BASH_TOOL = {
         },
     },
 }
-
-
-class AgentState(Enum):
-    """State machine states for terminal agent."""
-
-    PENDING = "pending"
-    GENERATING = "generating"
-    PROCESSING_COMMANDS = "processing_commands"
-    TERMINATED = "terminated"
 
 
 @dataclass
@@ -131,182 +123,100 @@ class TerminalBenchAgent:
         """
         self.gconfig = gconfig
         self.config = config
+        self._use_remote: bool | None = None
+        self._remote_health_client: RemoteDockerClient | None = None
 
-    # Class-level lock file path for cross-process synchronization
-    _LOCK_FILE = "/tmp/areal_docker_container.lock"
-    _PENDING_FILE = "/tmp/areal_docker_pending.count"
+    _container_semaphore: asyncio.Semaphore | None = None
+    _container_semaphore_limit: int | None = None
 
-    def _get_docker_container_count(self) -> int:
-        """Get current count of running Docker containers.
+    @classmethod
+    def _get_container_semaphore(cls, limit: int) -> asyncio.Semaphore:
+        if cls._container_semaphore is None or cls._container_semaphore_limit != limit:
+            cls._container_semaphore = asyncio.Semaphore(limit)
+            cls._container_semaphore_limit = limit
+        return cls._container_semaphore
 
-        In remote mode, queries the dev node's /health endpoint.
-        In local mode, counts local Docker containers with tb__ prefix.
-
-        Returns:
-            Number of running containers.
-        """
-        if self._should_use_remote():
-            # Remote mode: query dev node for active container count
-            try:
-                dev_node_url = os.environ.get("DEV_NODE_URL") or self.config.dev_node_url
-                response = requests.get(f"{dev_node_url}/health", timeout=5)
-                if response.status_code == 200:
-                    data = response.json()
-                    return data.get("active_containers", 0)
-                return 0
-            except Exception:
-                return 0
-        else:
-            # Local mode: count local Docker containers with tb__ prefix
-            try:
-                result = subprocess.run(
-                    ["docker", "ps", "--filter", "name=tb__", "-q"],
-                    capture_output=True,
-                    text=True,
-                    timeout=5,
-                )
-                if result.returncode == 0:
-                    # Count non-empty lines
-                    lines = [l for l in result.stdout.strip().split("\n") if l]
-                    return len(lines)
-                return 0
-            except Exception:
-                return 0
-
-    @staticmethod
-    def _read_pending_count() -> int:
-        """Read the pending container count from file."""
-        try:
-            with open(TerminalBenchAgent._PENDING_FILE, "r") as f:
-                return int(f.read().strip() or "0")
-        except (FileNotFoundError, ValueError):
-            return 0
-
-    @staticmethod
-    def _write_pending_count(count: int) -> None:
-        """Write the pending container count to file."""
-        with open(TerminalBenchAgent._PENDING_FILE, "w") as f:
-            f.write(str(max(0, count)))
-
-    @staticmethod
-    def reset_pending_counter() -> None:
-        """Reset pending counter to 0. Call at training start to clear stale state."""
-        try:
-            with open(TerminalBenchAgent._PENDING_FILE, "w") as f:
-                f.write("0")
-            logger.info("[Docker] Reset pending container counter to 0")
-        except Exception as e:
-            logger.warning(f"[Docker] Failed to reset pending counter: {e}")
-
-    def _acquire_container_slot(self, request_id: str) -> bool:
-        """Try to acquire a container slot atomically.
-
-        Uses file locking to prevent race conditions. Increments pending counter
-        if a slot is available.
-
-        Args:
-            request_id: Request ID for logging.
-
-        Returns:
-            True if slot acquired, False otherwise.
-        """
-        import fcntl
-
-        try:
-            with open(self._LOCK_FILE, "w") as lock_file:
-                # Acquire exclusive lock (blocking)
-                fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
-                try:
-                    running = self._get_docker_container_count()
-                    pending = self._read_pending_count()
-                    total = running + pending
-
-                    if total < self.config.max_containers:
-                        # Increment pending count to claim the slot
-                        self._write_pending_count(pending + 1)
-                        logger.info(
-                            f"[Docker] {request_id} acquired slot "
-                            f"(running={running}, pending={pending+1}, total={total+1}, max={self.config.max_containers})"
-                        )
-                        return True
-                    # Log rejection reason periodically
-                    logger.debug(
-                        f"[Docker] {request_id} slot denied "
-                        f"(running={running}, pending={pending}, total={total}, max={self.config.max_containers})"
-                    )
-                    return False
-                finally:
-                    fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
-        except Exception as e:
-            logger.warning(f"[Docker] Lock error for {request_id}: {e}")
-            return False
-
-    def _release_pending_slot(self, request_id: str) -> None:
-        """Decrement the pending counter after container started.
-
-        Should be called after Docker container has started successfully.
-
-        Args:
-            request_id: Request ID for logging.
-        """
-        import fcntl
-
-        try:
-            with open(self._LOCK_FILE, "w") as lock_file:
-                fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
-                try:
-                    pending = self._read_pending_count()
-                    running = self._get_docker_container_count()
-                    self._write_pending_count(pending - 1)
-                    logger.info(
-                        f"[Docker] {request_id} released pending slot "
-                        f"(running={running}, pending={max(0, pending-1)}, total={running + max(0, pending-1)})"
-                    )
-                finally:
-                    fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
-        except Exception as e:
-            logger.warning(f"[Docker] Failed to release pending slot for {request_id}: {e}")
-
-    async def _wait_for_container_slot(self, request_id: str) -> None:
-        """Wait until Docker container count is below max_containers limit.
-
-        Uses file locking and pending counter to prevent race conditions
-        across multiple workers.
-
-        Args:
-            request_id: Request ID for logging.
-        """
+    @asynccontextmanager
+    async def _container_slot(self, request_id: str):
         if self.config.max_containers is None:
+            yield
             return
+        if self._should_use_remote():
+            await self._wait_for_remote_slot(request_id)
+            yield
+            return
+        semaphore = self._get_container_semaphore(self.config.max_containers)
+        wait_start = time.monotonic()
+        await semaphore.acquire()
+        waited = time.monotonic() - wait_start
+        if waited > 1.0:
+            logger.info(
+                "[Docker] %s waited %.2fs for local slot (max=%s)",
+                request_id,
+                waited,
+                self.config.max_containers,
+            )
+        try:
+            yield
+        finally:
+            semaphore.release()
 
-        poll_interval = 0.5  # seconds
-        logged_waiting = False
+    def _get_remote_health_client(self) -> RemoteDockerClient:
+        if self._remote_health_client is None:
+            dev_node_url = os.environ.get("DEV_NODE_URL") or self.config.dev_node_url
+            self._remote_health_client = RemoteDockerClient(
+                dev_node_url=dev_node_url,
+                timeout=5.0,
+                max_retries=1,
+                retry_delay=0.5,
+            )
+        return self._remote_health_client
+
+    async def _wait_for_remote_slot(self, request_id: str) -> None:
+        poll_interval = 1.0
         wait_count = 0
-
         while True:
-            if self._acquire_container_slot(request_id):
-                if logged_waiting:
-                    running = self._get_docker_container_count()
-                    pending = self._read_pending_count()
+            try:
+                health = await self._run_blocking(
+                    self._get_remote_health_client().health_check
+                )
+            except Exception as e:
+                logger.warning(
+                    "[Docker] %s remote health check failed: %s", request_id, e
+                )
+                return
+
+            active = health.get("active_containers")
+            if active is None:
+                logger.warning(
+                    "[Docker] %s remote health missing active_containers", request_id
+                )
+                return
+
+            if active < self.config.max_containers:
+                if wait_count > 0:
                     logger.info(
-                        f"[Docker] Slot finally acquired for {request_id} after {wait_count} polls "
-                        f"(running={running}, pending={pending})"
+                        "[Docker] %s remote slot acquired (active=%s, max=%s)",
+                        request_id,
+                        active,
+                        self.config.max_containers,
                     )
                 return
 
             wait_count += 1
-            # Log waiting status initially and then every 20 polls (10 seconds)
-            if not logged_waiting or wait_count % 20 == 0:
-                running = self._get_docker_container_count()
-                pending = self._read_pending_count()
+            if wait_count == 1 or wait_count % 10 == 0:
                 logger.info(
-                    f"[Docker] Waiting for container slot {request_id} "
-                    f"(running={running}, pending={pending}, total={running+pending}, "
-                    f"max={self.config.max_containers}, waited={wait_count * poll_interval:.1f}s)"
+                    "[Docker] %s waiting for remote slot (active=%s, max=%s, waited=%.1fs)",
+                    request_id,
+                    active,
+                    self.config.max_containers,
+                    wait_count * poll_interval,
                 )
-                logged_waiting = True
 
             await asyncio.sleep(poll_interval)
+
+    async def _run_blocking(self, func, *args, **kwargs):
+        return await asyncio.to_thread(func, *args, **kwargs)
 
     async def run_agent(
         self,
@@ -322,138 +232,110 @@ class TerminalBenchAgent:
         Returns:
             Reward score from test execution
         """
-        messages = [dict(m) for m in data["messages"]]  # Deep copy
+        messages = deepcopy(data["messages"])
         task_path = Path(data["task_path"])
         task_name = data.get("task_name", task_path.name)
         request_id = uuid.uuid4().hex[:8]
 
-        import time as _time
-        run_start = _time.time()
-
-        # Trajectory for logging
         trajectory: list[dict[str, Any]] = []
         trajectory.append({"type": "user_input", "content": messages[-1]["content"]})
+        num_user_turns = 1  # Initial prompt counts as 1
+        num_assistant_turns = 0
+        last_response_id = None
 
-        # Wait for container slot (cross-process limit via Docker count)
-        wait_start = _time.time()
-        await self._wait_for_container_slot(request_id)
-        wait_time = _time.time() - wait_start
-        if wait_time > 1.0:
-            logger.info(f"[Docker] {request_id} waited {wait_time:.2f}s for slot")
+        terminal = None
+        terminal_started = False
+        error_context = None
 
-        # Create and start terminal
-        create_start = _time.time()
-        terminal = self._create_terminal(task_path, request_id)
-        logger.debug(f"[Docker] {request_id} terminal created in {_time.time() - create_start:.2f}s")
-
-        start_start = _time.time()
         try:
-            terminal.start()
-        except Exception as e:
-            # Release pending slot if terminal start fails
-            if self.config.max_containers is not None:
-                self._release_pending_slot(request_id)
-            # Save trajectory even on container start failure
-            logger.warning(f"[Docker] {request_id} terminal.start() failed: {e}")
-            if self.config.save_trajectory:
-                self._save_trajectory(
-                    trajectory=trajectory,
-                    task_path=task_path,
-                    request_id=request_id,
-                    reward_score=0.0,
-                    parser_results={"error": f"Container start failed: {e}"},
-                    num_user_turns=1,
-                    num_assistant_turns=0,
+            async with self._container_slot(request_id):
+                terminal = self._create_terminal(task_path, request_id)
+                start_start = time.monotonic()
+                try:
+                    await self._run_blocking(terminal.start)
+                    terminal_started = True
+                except Exception as e:
+                    error_context = f"Container start failed: {e}"
+                    logger.warning(f"[Docker] {request_id} terminal.start() failed: {e}")
+                    raise
+                logger.info(
+                    f"[Docker] {request_id} terminal.start() took {time.monotonic() - start_start:.2f}s"
                 )
-            raise
-        logger.info(f"[Docker] {request_id} terminal.start() took {_time.time() - start_start:.2f}s")
 
-        # Release pending slot now that container is running
-        if self.config.max_containers is not None:
-            self._release_pending_slot(request_id)
-
-        try:
-            session_start = _time.time()
-            session = terminal.create_session("agent", as_configured_user=True)
-            logger.info(f"[Docker] {request_id} create_session took {_time.time() - session_start:.2f}s")
-
-            state = AgentState.PENDING
-            turn = 0
-            last_response_id = None
-            num_user_turns = 1  # Initial prompt counts as 1
-            num_assistant_turns = 0
-
-            while state != AgentState.TERMINATED and turn < self.config.max_turns:
-                if state == AgentState.PENDING:
-                    state = AgentState.GENERATING
-
-                elif state == AgentState.GENERATING:
-                    # Generate model response with bash tool
-                    inference_start = _time.time()
-                    logger.debug(f"[Agent] {request_id} turn {turn}: calling inference...")
-                    response: ChatCompletion = await client.chat.completions.create(
-                        messages=messages,
-                        tools=[BASH_TOOL],
-                        tool_choice="auto",
-                        **self.gconfig.to_openai_args_dict(),
+                try:
+                    session_start = time.monotonic()
+                    session = await self._run_blocking(
+                        terminal.create_session,
+                        "agent",
+                        as_configured_user=True,
                     )
                     logger.info(
-                        f"[Agent] {request_id} turn {turn}: inference took "
-                        f"{_time.time() - inference_start:.2f}s"
+                        f"[Docker] {request_id} create_session took {time.monotonic() - session_start:.2f}s"
                     )
 
-                    message = response.choices[0].message
-                    last_response_id = response.id
-                    messages.append(message)
-                    turn += 1
-                    num_assistant_turns += 1
+                    for turn in range(self.config.max_turns):
+                        inference_start = time.monotonic()
+                        logger.debug(
+                            f"[Agent] {request_id} turn {turn}: calling inference..."
+                        )
+                        response: ChatCompletion = await client.chat.completions.create(
+                            messages=messages,
+                            tools=[BASH_TOOL],
+                            tool_choice="auto",
+                            **self.gconfig.to_openai_args_dict(),
+                        )
+                        logger.info(
+                            f"[Agent] {request_id} turn {turn}: inference took "
+                            f"{time.monotonic() - inference_start:.2f}s"
+                        )
 
-                    # Log assistant response
-                    trajectory.append(
-                        {
-                            "type": "assistant",
-                            "content": message.content,
-                            "tool_calls": (
-                                [
-                                    {
-                                        "id": tc.id,
-                                        "name": tc.function.name,
-                                        "arguments": tc.function.arguments,
-                                    }
-                                    for tc in message.tool_calls
-                                ]
-                                if message.tool_calls
-                                else None
-                            ),
-                        }
-                    )
+                        message = response.choices[0].message
+                        last_response_id = response.id
+                        messages.append(message)
+                        num_assistant_turns += 1
 
-                    # Check for tool calls
-                    if message.tool_calls:
-                        state = AgentState.PROCESSING_COMMANDS
-                    else:
-                        # No tool call means agent is done
-                        state = AgentState.TERMINATED
+                        trajectory.append(
+                            {
+                                "type": "assistant",
+                                "content": message.content,
+                                "tool_calls": (
+                                    [
+                                        {
+                                            "id": tc.id,
+                                            "name": tc.function.name,
+                                            "arguments": tc.function.arguments,
+                                        }
+                                        for tc in message.tool_calls
+                                    ]
+                                    if message.tool_calls
+                                    else None
+                                ),
+                            }
+                        )
 
-                elif state == AgentState.PROCESSING_COMMANDS:
-                    # Execute bash commands
-                    for tool_call in messages[-1].tool_calls:
-                        if tool_call.function.name == "bash":
+                        tool_calls = message.tool_calls or []
+                        if not tool_calls:
+                            break
+
+                        for tool_call in tool_calls:
+                            if tool_call.function.name != "bash":
+                                continue
                             try:
                                 args = json.loads(tool_call.function.arguments)
                             except json.JSONDecodeError:
                                 args = {"command": "echo 'Invalid JSON arguments'"}
 
                             command = args.get("command", "")
-                            cmd_start = _time.time()
-                            output = self._execute_command(session, command)
+                            cmd_start = time.monotonic()
+                            output = await self._run_blocking(
+                                self._execute_command, session, command
+                            )
                             logger.debug(
                                 f"[Agent] {request_id} command executed in "
-                                f"{_time.time() - cmd_start:.2f}s: {command[:50]}..."
+                                f"{time.monotonic() - cmd_start:.2f}s: {command[:50]}..."
                             )
                             output = self._limit_output(output)
 
-                            # Add tool response to messages
                             messages.append(
                                 {
                                     "role": "tool",
@@ -461,8 +343,6 @@ class TerminalBenchAgent:
                                     "content": output,
                                 }
                             )
-
-                            # Log observation
                             trajectory.append(
                                 {
                                     "type": "observation",
@@ -472,64 +352,58 @@ class TerminalBenchAgent:
                             )
                             num_user_turns += 1
 
-                    state = AgentState.GENERATING
+                    reward, parser_results = await self._run_blocking(
+                        self._run_tests_and_compute_reward,
+                        terminal,
+                        task_path,
+                    )
 
-            # Run tests and compute reward
-            reward, parser_results = self._run_tests_and_compute_reward(
-                terminal, task_path
-            )
-            logger.info(
-                f"[Docker] Task completed: {task_name} (id={request_id}, "
-                f"reward={reward:.2f}, turns={num_assistant_turns})"
-            )
+                    logger.info(
+                        f"[Docker] Task completed: {task_name} (id={request_id}, "
+                        f"reward={reward:.2f}, turns={num_assistant_turns})"
+                    )
 
-            # Set reward on last response
-            if last_response_id:
-                client.set_reward(last_response_id, reward)
+                    if last_response_id:
+                        client.set_reward(last_response_id, reward)
 
-            # Save trajectory for debugging
-            if self.config.save_trajectory:
-                self._save_trajectory(
-                    trajectory=trajectory,
-                    task_path=task_path,
-                    request_id=request_id,
-                    reward_score=reward,
-                    parser_results=parser_results,
-                    num_user_turns=num_user_turns,
-                    num_assistant_turns=num_assistant_turns,
-                )
+                    if self.config.save_trajectory:
+                        await self._run_blocking(
+                            self._save_trajectory,
+                            trajectory=trajectory,
+                            task_path=task_path,
+                            request_id=request_id,
+                            reward_score=reward,
+                            parser_results=parser_results,
+                            num_user_turns=num_user_turns,
+                            num_assistant_turns=num_assistant_turns,
+                        )
 
-            return reward
-
+                    return reward
+                finally:
+                    stop_start = time.monotonic()
+                    if terminal_started and terminal is not None:
+                        try:
+                            await self._run_blocking(terminal.stop)
+                            logger.info(
+                                f"[Docker] Container stopped: {request_id} in {time.monotonic() - stop_start:.2f}s"
+                            )
+                        except Exception as e:
+                            logger.warning(f"Error stopping terminal {request_id}: {e}")
         except Exception as e:
-            # Save trajectory even on failure for debugging
             logger.warning(f"[Agent] {request_id} failed with error: {e}")
             if self.config.save_trajectory:
-                self._save_trajectory(
+                error_message = error_context or str(e)
+                await self._run_blocking(
+                    self._save_trajectory,
                     trajectory=trajectory,
                     task_path=task_path,
                     request_id=request_id,
                     reward_score=0.0,
-                    parser_results={"error": str(e)},
+                    parser_results={"error": error_message},
                     num_user_turns=num_user_turns,
                     num_assistant_turns=num_assistant_turns,
                 )
             raise
-
-        finally:
-            # Cleanup - container count will naturally decrease when container stops
-            import time as _time
-            stop_start = _time.time()
-            try:
-                terminal.stop()
-                running = self._get_docker_container_count()
-                pending = self._read_pending_count()
-                logger.info(
-                    f"[Docker] Container stopped: {request_id} in {_time.time() - stop_start:.2f}s "
-                    f"(running={running}, pending={pending}, total={running+pending})"
-                )
-            except Exception as e:
-                logger.warning(f"Error stopping terminal {request_id}: {e}")
 
     def _should_use_remote(self) -> bool:
         """Determine whether to use remote mode.
@@ -537,17 +411,22 @@ class TerminalBenchAgent:
         Returns:
             True if remote mode should be used, False for local Docker.
         """
+        if self._use_remote is not None:
+            return self._use_remote
         if self.config.use_remote is not None:
-            return self.config.use_remote
+            self._use_remote = self.config.use_remote
+            return self._use_remote
 
         # Auto-detect: check DEV_NODE_URL environment variable
         dev_node_url = os.environ.get("DEV_NODE_URL")
         if dev_node_url:
             logger.info(f"Auto-detected remote mode from DEV_NODE_URL: {dev_node_url}")
-            return True
+            self._use_remote = True
+            return self._use_remote
 
         logger.info("Using local Docker mode (no DEV_NODE_URL set)")
-        return False
+        self._use_remote = False
+        return self._use_remote
 
     def _create_terminal(self, task_path: Path, instance_id: str) -> TerminalType:
         """Create terminal for task (local or remote based on config).
@@ -666,13 +545,13 @@ class TerminalBenchAgent:
 
             if paths_to_copy:
                 terminal.copy_to_container(
-                    paths=paths_to_copy, container_dir="/tmp/tests"
+                    paths=paths_to_copy, container_dir="/tests"
                 )
 
             # Create test session and run tests
             test_session = terminal.create_session("tests", as_configured_user=False)
             test_session.send_keys(
-                ["bash /tmp/tests/run-tests.sh", "Enter"],
+                ["bash /tests/run-tests.sh", "Enter"],
                 block=True,
                 max_timeout_sec=self.config.test_timeout_sec,
             )
@@ -789,6 +668,7 @@ class TerminalBenchWorkflow(RolloutWorkflow):
         agent_config: dict | TerminalAgentConfig,
         export_style: str = "concat",
         turn_discount: float = 0.9,
+        samples_per_task: int = 1,
     ):
         """Initialize Terminal Bench workflow.
 
@@ -798,6 +678,7 @@ class TerminalBenchWorkflow(RolloutWorkflow):
             agent_config: Agent configuration dict or TerminalAgentConfig.
             export_style: Export style for interactions ("concat" or "individual").
             turn_discount: Discount factor for multi-turn rewards.
+            samples_per_task: Number of independent rollouts per task.
         """
         if isinstance(tokenizer, str):
             tokenizer = load_hf_tokenizer(tokenizer)
@@ -806,29 +687,23 @@ class TerminalBenchWorkflow(RolloutWorkflow):
         self.export_style = export_style
         self.turn_discount = turn_discount
         self.chat_template_type = "concat" if export_style == "concat" else "hf"
+        if samples_per_task < 1:
+            raise ValueError(
+                f"samples_per_task must be >= 1, got {samples_per_task}"
+            )
+        self.samples_per_task = samples_per_task
 
         # Create agent config
         if isinstance(agent_config, dict):
             agent_config = TerminalAgentConfig(**agent_config)
 
+        self.gconfig = gconfig.new(n_samples=1)
         self.agent = TerminalBenchAgent(
-            gconfig=gconfig.new(n_samples=1),
+            gconfig=self.gconfig,
             config=agent_config,
         )
 
-        # Reset pending counter to clear stale state from previous runs
-        TerminalBenchAgent.reset_pending_counter()
-
-    async def arun_episode(self, engine, data):
-        """Run single episode of terminal bench task.
-
-        Args:
-            engine: Inference engine.
-            data: Task data dict.
-
-        Returns:
-            Dict of interactions with rewards.
-        """
+    async def _run_sample(self, engine, data):
         client = ArealOpenAI(
             engine=engine,
             tokenizer=self.tokenizer,
@@ -841,8 +716,28 @@ class TerminalBenchWorkflow(RolloutWorkflow):
         stats_tracker.get(workflow_context.stat_scope()).scalar(reward=reward)
 
         client.apply_reward_discount(turn_discount=self.turn_discount)
-        completions_with_reward = client.export_interactions(style=self.export_style)
-        return completions_with_reward
+        return client.export_interactions(style=self.export_style)
+
+    async def arun_episode(self, engine, data):
+        """Run single episode of terminal bench task.
+
+        Args:
+            engine: Inference engine.
+            data: Task data dict.
+
+        Returns:
+            Dict of interactions with rewards.
+        """
+        if self.samples_per_task == 1:
+            return await self._run_sample(engine, data)
+
+        results = await asyncio.gather(
+            *[self._run_sample(engine, data) for _ in range(self.samples_per_task)]
+        )
+        merged: dict[str, Any] = {}
+        for result in results:
+            merged.update(result)
+        return merged if merged else None
 
 
 @dataclass
@@ -890,6 +785,19 @@ def main(args):
     config, _ = load_expr_config(args, TerminalBenchGRPOConfig)
     tokenizer = load_hf_tokenizer(config.tokenizer_path)
 
+    train_samples_per_task = max(1, config.gconfig.n_samples)
+    eval_samples_per_task = max(1, config.eval_gconfig.n_samples)
+    if train_samples_per_task != 1 or eval_samples_per_task != 1:
+        logger.info(
+            "Using samples_per_task for terminal bench rollouts "
+            "(train=%s, eval=%s); forcing gconfig.n_samples=1 for single-sample "
+            "generation inside the workflow.",
+            train_samples_per_task,
+            eval_samples_per_task,
+        )
+    config.gconfig = config.gconfig.new(n_samples=1)
+    config.eval_gconfig = config.eval_gconfig.new(temperature=0.6, n_samples=1)
+
     # Get tasks_base_path from agent_config
     tasks_base_path = config.agent_config.get("tasks_base_path", "")
 
@@ -923,11 +831,13 @@ def main(args):
         agent_config=config.agent_config,
         export_style=config.export_style,
         turn_discount=config.turn_discount,
+        samples_per_task=train_samples_per_task,
     )
 
     # Eval workflow with lower temperature
     eval_workflow_kwargs = workflow_kwargs.copy()
-    eval_workflow_kwargs["gconfig"] = config.gconfig.new(temperature=0.6, n_samples=1)
+    eval_workflow_kwargs["gconfig"] = config.eval_gconfig
+    eval_workflow_kwargs["samples_per_task"] = eval_samples_per_task
 
     with PPOTrainer(
         config,

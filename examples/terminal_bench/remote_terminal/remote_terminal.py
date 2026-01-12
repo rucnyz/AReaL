@@ -193,9 +193,8 @@ class RemoteTerminal:
         if isinstance(paths, Path):
             paths = [paths]
 
-        # Convert Path objects to absolute path strings
-        # These paths should exist on dev node (dev node and local are synced)
-        path_strings = [str(path.resolve().absolute()) for path in paths]
+        # Keep relative paths so dev node can resolve against its own working dir.
+        path_strings = [str(path) for path in paths]
 
         # Use the copy_from_path endpoint which copies from dev node's local filesystem
         self._client.copy_to_container_from_path(

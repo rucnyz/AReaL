@@ -1,5 +1,4 @@
-# ssh -L 8081:10.32.80.102:8081 tw-jump -N
-export DEV_NODE_URL=http://localhost:8081
+export DEV_NODE_URL=http://10.32.80.102:8081
 
 python -m areal.launcher.local \
       examples/terminal_bench/terminal_bench_rl.py \

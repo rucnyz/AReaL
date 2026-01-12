@@ -82,11 +82,24 @@ class RemoteDockerClient:
                 params=params,
                 timeout=self.timeout,
             )
-            response.raise_for_status()
-            return response.json()
         except requests.RequestException as e:
             self._logger.error(f"Request failed: {method} {url} - {e}")
             raise
+
+        if response.status_code >= 400:
+            body = response.text
+            if len(body) > 2000:
+                body = f"{body[:2000]}...(truncated)"
+            self._logger.error(
+                "Request failed: %s %s - HTTP %s response: %s",
+                method,
+                url,
+                response.status_code,
+                body,
+            )
+            response.raise_for_status()
+
+        return response.json()
 
     def start_container(
         self,

@@ -156,6 +156,13 @@ def create_session(container_id: str):
     """
     try:
         if container_id not in _active_containers:
+            active_preview = list(_active_containers.keys())[:5]
+            logging.warning(
+                "copy-from-path: container not found: %s (active=%d, sample=%s)",
+                container_id,
+                len(_active_containers),
+                active_preview,
+            )
             return jsonify({
                 "error": f"Container {container_id} not found",
             }), 404
@@ -368,6 +375,11 @@ def copy_from_path_to_container(container_id: str):
         # Verify all paths exist on dev node
         for path in path_objects:
             if not path.exists():
+                logging.warning(
+                    "copy-from-path: missing path for container %s: %s",
+                    container_id,
+                    path,
+                )
                 return jsonify({
                     "error": f"Path not found on dev node: {path}",
                 }), 404

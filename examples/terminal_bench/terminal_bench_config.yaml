@@ -54,20 +54,20 @@ rollout:
 gconfig:
   n_samples: 4
   min_new_tokens: 0
-  max_new_tokens: 20000  # Reduced to avoid context length overflow (input + output must fit in 32768)
+  max_new_tokens: 20000
   greedy: false
   temperature: 0.8
 
 actor:
   experiment_name: ${experiment_name}
   trial_name: ${trial_name}
-  path: Qwen/Qwen2.5-7B-Instruct
+  path: yuzhounie/sft_qwen32b
   init_from_scratch: false
   disable_dropout: true
   gradient_checkpointing: true
   dtype: bfloat16
   mb_spec:
-    max_tokens_per_mb: 10240
+    max_tokens_per_mb: 32768
   optimizer:
     type: adam
     lr: 1.0e-6
@@ -125,7 +125,7 @@ sglang:
   random_seed: ${seed}
   skip_tokenizer_init: true
   dtype: ${actor.dtype}
-  max_running_requests: null
+  max_running_requests: 32  # Limit concurrent requests to avoid queue buildup
   context_length: null  # Use model's default context length
   mem_fraction_static: 0.8
 
