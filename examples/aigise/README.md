@@ -9,7 +9,7 @@ Train AIgiSE security analysis agents using AReaL's GRPO pipeline.
 ./examples/aigise/run_aigise_grpo.sh --trial my_experiment
 ```
 
-See [AReaL-Training wiki](../../AIgiSE/docs/wiki/AReaL-Training.md) for full setup, configuration, and known issues.
+See [AReaL-Training wiki](https://github.com/opensage-agent/AIgiSE/blob/main/docs/wiki/AReaL-Training.md) for full setup, configuration, and known issues.
 
 ## Files
 
