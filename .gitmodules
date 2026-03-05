@@ -1,0 +1,4 @@
+[submodule "AIgiSE"]
+	path = AIgiSE
+	url = git@github-personal:OpenSage-ADK/AIgiSE.git
+	branch = jingyang/areal_slime_integration

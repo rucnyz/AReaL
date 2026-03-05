@@ -204,3 +204,4 @@ wandb/
 outputs/
 sympy/
 !/docs/figures/*
+running_logs/
