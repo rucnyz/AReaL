@@ -117,7 +117,7 @@ def main(args):
         reasoning_parser=config.reasoning_parser,
         log_raw_conversation=config.log_raw_conversation,
         model_name=config.tokenizer_path,
-        create_kwargs=getattr(config, "create_kwargs", {}),
+        generation_kwargs=getattr(config, "generation_kwargs", {}),
     )
 
     with PPOTrainer(
