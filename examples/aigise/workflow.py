@@ -50,7 +50,7 @@ class AIgiSERLWorkflow(RolloutWorkflow):
         reasoning_parser: str = "qwen3-thinking",
         log_raw_conversation: bool = False,
         model_name: str | None = None,
-        create_kwargs: dict | None = None,
+        generation_kwargs: dict | None = None,
     ):
         if isinstance(tokenizer, str):
             from areal.utils.hf_utils import load_hf_tokenizer
@@ -65,7 +65,7 @@ class AIgiSERLWorkflow(RolloutWorkflow):
         self.tool_call_parser = tool_call_parser
         self.reasoning_parser = reasoning_parser
         self.log_raw_conversation = log_raw_conversation
-        self.create_kwargs = create_kwargs or {}
+        self.generation_kwargs = generation_kwargs or {}
 
         if export_style not in ["individual", "concat"]:
             raise ValueError(f"Invalid export style: {export_style}")
@@ -122,7 +122,7 @@ class AIgiSERLWorkflow(RolloutWorkflow):
             openai_client=client,
             default_max_tokens=self.max_new_tokens,
             on_generate=on_generate,
-            create_kwargs=self.create_kwargs,
+            generation_kwargs=self.generation_kwargs,
         )
 
         generate_kwargs = {}

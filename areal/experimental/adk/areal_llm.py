@@ -148,7 +148,7 @@ class ArealLlm(BaseLlm):
         model_name: str = "areal",
         default_max_tokens: int | None = None,
         on_generate: Callable[[str, str], None] | None = None,
-        create_kwargs: dict[str, Any] | None = None,
+        generation_kwargs: dict[str, Any] | None = None,
         **kwargs: Any,
     ):
         """Initialize ArealLlm.
@@ -163,13 +163,13 @@ class ArealLlm(BaseLlm):
             on_generate: Optional callback function called after each generation
                 with (input_text, output_text) as arguments. Useful for logging
                 or debugging.
-            create_kwargs: Default kwargs merged into every
+            generation_kwargs: Default kwargs merged into every
                 ``ArealOpenAI.chat.completions.create()`` call. Accepts any
                 parameter the API supports (``extra_body``, ``temperature``,
                 etc.). Per-call values from LlmRequest.config take precedence.
                 Example::
 
-                    create_kwargs={
+                    generation_kwargs={
                         "extra_body": {
                             "chat_template_kwargs": {"enable_thinking": True}
                         }
@@ -181,7 +181,7 @@ class ArealLlm(BaseLlm):
         self._client = openai_client
         self._default_max_tokens = default_max_tokens
         self._on_generate = on_generate
-        self._create_kwargs = create_kwargs or {}
+        self._generation_kwargs = generation_kwargs or {}
 
     @staticmethod
     def supported_models() -> list[str]:
@@ -579,8 +579,8 @@ class ArealLlm(BaseLlm):
         if tools:
             kwargs["tools"] = tools
 
-        # Merge create_kwargs (config/per-call values take precedence)
-        for k, v in self._create_kwargs.items():
+        # Merge generation_kwargs (config/per-call values take precedence)
+        for k, v in self._generation_kwargs.items():
             if k not in kwargs:
                 kwargs[k] = v
 

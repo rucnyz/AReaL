@@ -33,10 +33,10 @@ class AIgiSEGRPOConfig(GRPOConfig):
         default=False,
         metadata={"help": "Whether to log raw input/output text for each turn."},
     )
-    create_kwargs: dict = field(
+    generation_kwargs: dict = field(
         default_factory=dict,
         metadata={
-            "help": "Default kwargs passed to ArealOpenAI.chat.completions.create() on every call. "
+            "help": "Default kwargs merged into every generation call. "
             "Example: {extra_body: {chat_template_kwargs: {enable_thinking: true}}}"
         },
     )

@@ -11,7 +11,7 @@ tool_call_parser: qwen25
 reasoning_parser: qwen3
 log_raw_conversation: true
 
-create_kwargs:
+generation_kwargs:
   extra_body:
     chat_template_kwargs:
       enable_thinking: true
