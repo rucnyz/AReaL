@@ -19,16 +19,6 @@ from areal.utils import stats_tracker
 logger = logging.getLogger(__name__)
 
 
-def _debug_log(msg: str) -> None:
-    """Write debug message to a file for post-run analysis."""
-    log_path = os.environ.get("AREAL_DEBUG_LOG", "/tmp/areal_llm_debug.log")
-    try:
-        with open(log_path, "a") as f:
-            f.write(f"[{datetime.now().isoformat()}] [Workflow] {msg}\n")
-    except Exception:
-        pass
-
-
 class AIgiSERLWorkflow(RolloutWorkflow):
     """Multi-turn RL workflow for AIgiSE tasks.
 
@@ -129,7 +119,7 @@ class AIgiSERLWorkflow(RolloutWorkflow):
         if self.max_turns is not None:
             generate_kwargs["max_turns"] = self.max_turns
 
-        _debug_log(f"=== Trajectory START data_id={data_id} ===")
+        logger.debug(f"=== Trajectory START data_id={data_id} ===")
 
         with self._aigise_client.init_session() as session:
             result = await session.areal_generate(
@@ -193,7 +183,7 @@ class AIgiSERLWorkflow(RolloutWorkflow):
             + f"\n=== End Summary ==="
         )
 
-        _debug_log(summary)
+        logger.debug(summary)
         logger.info(summary)
 
         # Also dump full trajectory to a JSON file for detailed analysis
@@ -298,11 +288,11 @@ class AIgiSERLWorkflow(RolloutWorkflow):
                 json.dump(full_data, f, ensure_ascii=False, indent=2, default=str)
 
         except Exception as e:
-            _debug_log(f"Failed to dump trajectory JSON: {e}")
+            logger.debug(f"Failed to dump trajectory JSON: {e}")
 
     async def arun_episode(self, engine, data) -> dict:
         data_id = data.get("id", "unknown") if isinstance(data, dict) else "?"
-        _debug_log(f"=== arun_episode START data_id={data_id} ===")
+        logger.debug(f"=== arun_episode START data_id={data_id} ===")
 
         client = ArealOpenAI(
             engine=engine,
@@ -315,7 +305,7 @@ class AIgiSERLWorkflow(RolloutWorkflow):
         reward = await self._run_trajectory(data, client)
         stats_tracker.get(workflow_context.stat_scope()).scalar(reward=reward)
 
-        _debug_log(
+        logger.debug(
             f"arun_episode: reward={reward}, "
             f"n_interactions={len(client._cache)}, "
             f"applying reward discount..."
@@ -333,7 +323,7 @@ class AIgiSERLWorkflow(RolloutWorkflow):
                 total_tokens += len(getattr(mr, "input_tokens", []))
                 total_tokens += len(getattr(mr, "output_tokens_without_stop", []))
 
-        _debug_log(
+        logger.debug(
             f"=== arun_episode DONE data_id={data_id} "
             f"reward={reward} exported={n_exported} "
             f"total_tokens={total_tokens} ==="

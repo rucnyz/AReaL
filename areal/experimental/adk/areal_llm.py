@@ -44,10 +44,8 @@ from __future__ import annotations
 
 import json
 import logging
-import os
 import re
 from collections.abc import AsyncGenerator, Callable
-from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
 from google.adk.models import BaseLlm
@@ -56,15 +54,8 @@ from google.adk.models.llm_response import LlmResponse
 from google.genai import types
 from google.genai.types import Content, Part
 
+logger = logging.getLogger(__name__)
 
-def _debug_log(msg: str) -> None:
-    """Write debug message to a file for post-run analysis."""
-    log_path = os.environ.get("AREAL_DEBUG_LOG", "/tmp/areal_llm_debug.log")
-    try:
-        with open(log_path, "a") as f:
-            f.write(f"[{datetime.now().isoformat()}] {msg}\n")
-    except Exception:
-        pass
 
 def _try_parse_python_style_tool_calls(
     text: str,
@@ -316,18 +307,18 @@ class ArealLlm(BaseLlm):
                         logger.warning(
                             "[DEBUG] set_model_response tool def: %s", detail,
                         )
-                        _debug_log(f"set_model_response tool def:\n{detail}")
+                        logger.debug(f"set_model_response tool def:\n{detail}")
                 else:
                     logger.warning(
                         "[DEBUG] Tool %s: _get_declaration() returned None", tool_name
                     )
-                    _debug_log(f"Tool {tool_name}: _get_declaration() returned None")
+                    logger.debug(f"Tool {tool_name}: _get_declaration() returned None")
             except Exception as e:
                 logger.warning(f"Failed to convert tool {tool_name}: {e}")
                 import traceback
                 tb = traceback.format_exc()
                 logger.warning("[DEBUG] Traceback: %s", tb)
-                _debug_log(f"Failed to convert tool {tool_name}: {e}\n{tb}")
+                logger.debug(f"Failed to convert tool {tool_name}: {e}\n{tb}")
                 continue
 
         return openai_tools if openai_tools else None
